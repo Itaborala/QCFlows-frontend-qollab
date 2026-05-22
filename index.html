@@ -3,73 +3,56 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bell Circuit Runner</title>
+  <title>bell circuit</title>
   <style>
-    * { margin: 0; box-sizing: border-box; }
-    body { font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; background: #0a0a0f; color: #e0e0e0; }
-    .card { text-align: center; padding: 3rem 2rem; border: 1px solid #222; border-radius: 12px; max-width: 420px; width: 90%; }
-    h1 { font-size: 1.4rem; margin-bottom: .4rem; }
-    p.sub { color: #888; font-size: .85rem; margin-bottom: 2rem; }
-    button {
-      padding: .75rem 2rem; font-size: 1rem; border: none; border-radius: 8px;
-      background: #6366f1; color: #fff; cursor: pointer; transition: opacity .15s;
-    }
-    button:hover { opacity: .85; }
-    button:disabled { opacity: .4; cursor: wait; }
-    #result { margin-top: 2rem; font-family: monospace; font-size: .95rem; white-space: pre-wrap; min-height: 1.4em; }
-    .bar-chart { display: flex; justify-content: center; gap: 1.5rem; margin-top: 1.5rem; align-items: flex-end; height: 120px; }
-    .bar-col { display: flex; flex-direction: column; align-items: center; gap: .3rem; }
-    .bar { width: 48px; background: #6366f1; border-radius: 4px 4px 0 0; transition: height .4s; }
-    .bar-label { font-size: .75rem; color: #aaa; }
-    .bar-value { font-size: .75rem; }
+    body { font-family: monospace; max-width: 480px; margin: 4rem auto; padding: 0 1rem; }
+    button { font-family: inherit; font-size: 1rem; padding: .4rem 1rem; cursor: pointer; border: 1px solid #000; background: #fff; }
+    button:hover { background: #000; color: #fff; }
+    button:disabled { opacity: .3; cursor: wait; }
+    #result { margin-top: 1.5rem; white-space: pre-wrap; }
+    .bar-row { display: flex; align-items: center; gap: .5rem; margin: .3rem 0; }
+    .bar-label { width: 3rem; text-align: right; }
+    .bar { height: 14px; background: #000; }
+    .bar-value { font-size: .85rem; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>⚛ Bell Circuit</h1>
-    <p class="sub">Submit a 2-qubit bell state to qcircuit-relayer (Aer)</p>
-    <button id="run">Run Circuit</button>
-    <div id="result"></div>
-    <div id="chart" class="bar-chart"></div>
-  </div>
+  <h1>bell circuit</h1>
+  <p>2-qubit bell state → aer simulator</p>
+  <br>
+  <button id="run">run</button>
+  <div id="result"></div>
 
   <script>
-    // ── Point this at your deployed backend ──
     const API = localStorage.getItem("api_url") || "http://localhost:8000";
-
     const btn = document.getElementById("run");
     const res = document.getElementById("result");
-    const chart = document.getElementById("chart");
 
     btn.addEventListener("click", async () => {
       btn.disabled = true;
-      res.textContent = "running…";
-      chart.innerHTML = "";
+      res.innerHTML = "running…";
       try {
         const r = await fetch(`${API}/run-bell`, { method: "POST" });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        if (!r.ok) throw new Error(`${r.status}`);
         const data = await r.json();
-        res.textContent = `job ${data.job_id.slice(0, 8)}…  →  ${JSON.stringify(data.counts)}`;
-        renderChart(data.counts);
+        const counts = data.counts;
+        const max = Math.max(...Object.values(counts));
+        let html = "";
+        for (const [label, val] of Object.entries(counts).sort()) {
+          const w = Math.round((val / max) * 200);
+          html += `<div class="bar-row">
+            <span class="bar-label">${label}</span>
+            <div class="bar" style="width:${w}px"></div>
+            <span class="bar-value">${val}</span>
+          </div>`;
+        }
+        res.innerHTML = html;
       } catch (e) {
         res.textContent = `error: ${e.message}`;
       } finally {
         btn.disabled = false;
       }
     });
-
-    function renderChart(counts) {
-      const max = Math.max(...Object.values(counts));
-      for (const [label, val] of Object.entries(counts).sort()) {
-        const h = Math.round((val / max) * 100);
-        chart.innerHTML += `
-          <div class="bar-col">
-            <span class="bar-value">${val}</span>
-            <div class="bar" style="height:${h}px"></div>
-            <span class="bar-label">${label}</span>
-          </div>`;
-      }
-    }
   </script>
 </body>
 </html>
