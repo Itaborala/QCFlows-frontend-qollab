@@ -1,0 +1,14 @@
+# Production (main branch) → production backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.qcflows.net/:splat"
+  status = 200
+  force = true
+
+# Dev branch → staging backend
+[context.branch-deploy]
+  [[context.branch-deploy.redirects]]
+    from = "/api/*"
+    to = "https://api-test.qcflows.net/:splat"
+    status = 200
+    force = true
