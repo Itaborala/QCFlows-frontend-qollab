@@ -1,0 +1,3 @@
+[build]
+  publish = "."
+  command = "test -f _redirects.${BRANCH} && cp _redirects.${BRANCH} _redirects || true"
