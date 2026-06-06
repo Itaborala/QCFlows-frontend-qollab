@@ -1,5 +1,5 @@
 import {apiGet, apiPost} from "./api.js";
-import {appState, setBasis, setMetric, setNumQubits} from "./state.js";
+import {appState, setBasis, setMarker, setMetric, setNumQubits} from "./state.js";
 import {initGraph, renderGraph} from "./graph.js";
 import {renderMatrix} from "./matrix.js";
 import {
@@ -8,6 +8,7 @@ import {
   renderGraphCaption,
   renderPanelError,
   renderStatevector,
+  renderTimeline,
   setQubitInputs,
   setStatus,
 } from "./views.js";
@@ -38,7 +39,7 @@ initGraph(qubitId => {
 
 bindControls();
 setQubitInputs(appState.numQubits);
-refreshAll();
+initialize();
 
 function bindControls() {
   bindSegmented("basis-control", "basis", value => {
@@ -48,6 +49,12 @@ function bindControls() {
   bindSegmented("metric-control", "metric", value => {
     setMetric(value);
     refreshGraph();
+  });
+
+  document.getElementById("history-marker").addEventListener("input", event => {
+    setMarker(event.target.value);
+    renderTimeline(appState.timelineData, appState);
+    refreshAll();
   });
 
   document.querySelectorAll("[data-single-gate]").forEach(button => {
@@ -127,8 +134,29 @@ async function refreshAll() {
   setStatus(failed.length ? "Backend missing" : "Ready", failed.length ? "error" : "ok");
 }
 
+async function initialize() {
+  await refreshTimeline();
+  await refreshAll();
+}
+
+async function refreshTimeline() {
+  try {
+    const data = await apiGet("/timeline");
+    appState.timelineData = data;
+    if (appState.marker === null && Number.isInteger(Number(data.current_marker))) {
+      setMarker(data.current_marker);
+    }
+    renderTimeline(data, appState);
+  } catch {
+    appState.timelineData = null;
+    setMarker(null);
+    renderTimeline(null, appState);
+  }
+}
+
 async function refreshGraph() {
   const params = new URLSearchParams({basis: appState.basis, metric: appState.metric});
+  appendMarker(params);
   try {
     const data = await apiGet(`/graph_data?${params.toString()}`);
     appState.graphData = data;
@@ -147,8 +175,10 @@ async function refreshGraph() {
 }
 
 async function refreshState() {
+  const params = new URLSearchParams({basis: appState.basis});
+  appendMarker(params);
   try {
-    const data = await apiGet(`/get_state?basis=${appState.basis}`);
+    const data = await apiGet(`/get_state?${params.toString()}`);
     appState.stateData = data;
     renderStatevector(data);
     renderBasisGrid(data);
@@ -160,8 +190,11 @@ async function refreshState() {
 }
 
 async function refreshCircuit() {
+  const params = new URLSearchParams();
+  appendMarker(params);
+  const suffix = params.toString() ? `?${params.toString()}` : "";
   try {
-    renderCircuit(await apiGet("/get_circuit"));
+    renderCircuit(await apiGet(`/get_circuit${suffix}`));
   } catch (error) {
     renderPanelError("circuit", "Circuit unavailable.");
     throw error;
@@ -172,9 +205,16 @@ async function runAction(action) {
   try {
     setStatus("Updating");
     await action();
+    await refreshTimeline();
     await refreshAll();
   } catch (error) {
     setStatus(error.message, "error");
+  }
+}
+
+function appendMarker(params) {
+  if (appState.marker !== null) {
+    params.set("marker", String(appState.marker));
   }
 }
 

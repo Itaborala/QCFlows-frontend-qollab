@@ -7,12 +7,45 @@ export function setStatus(message, tone = "neutral") {
 export function renderGraphCaption(state, data) {
   const caption = document.getElementById("graph-caption");
   const metric = data?.metric_label || state.metric.toUpperCase();
-  caption.textContent = `${metric}, ${state.basis.toUpperCase()} basis`;
+  const markerLabel = data?.marker_label ? `, ${data.marker_label}` : "";
+  caption.textContent = `${metric}, ${state.basis.toUpperCase()} basis${markerLabel}`;
 }
 
 export function renderCircuit(data) {
   const container = document.getElementById("circuit");
   container.innerHTML = data?.circuit_diagram || "No circuit.";
+}
+
+export function renderTimeline(data, state) {
+  const input = document.getElementById("history-marker");
+  const label = document.getElementById("history-label");
+  const count = document.getElementById("history-count");
+  if (!input || !label || !count) return;
+
+  const markers = Array.isArray(data?.markers) ? data.markers : [];
+  if (!markers.length) {
+    input.disabled = true;
+    input.min = 0;
+    input.max = 0;
+    input.value = 0;
+    label.textContent = "Latest";
+    count.textContent = "-";
+    return;
+  }
+
+  const ids = markers.map(marker => Number(marker.id)).filter(Number.isInteger);
+  const min = Math.min(...ids);
+  const max = Math.max(...ids);
+  const current = state.marker ?? Number(data.current_marker ?? max);
+  const active = markers.find(marker => Number(marker.id) === current) || markers[markers.length - 1];
+
+  input.disabled = false;
+  input.min = min;
+  input.max = max;
+  input.step = 1;
+  input.value = Number(active.id);
+  label.textContent = active.label || `Marker ${active.id}`;
+  count.textContent = `${active.id}/${max}`;
 }
 
 export function renderStatevector(data) {

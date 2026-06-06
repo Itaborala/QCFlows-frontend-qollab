@@ -193,6 +193,37 @@ pre {
   color: #fff;
 }
 
+.history-control {
+  display: grid;
+  gap: 8px;
+}
+
+.history-control input[type="range"] {
+  padding: 0;
+  accent-color: var(--accent);
+}
+
+.history-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 18px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#history-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#history-count {
+  font-family: var(--mono);
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(420px, 1.5fr) minmax(300px, 0.9fr);
