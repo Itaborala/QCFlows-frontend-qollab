@@ -16,6 +16,25 @@ export function renderCircuit(data) {
   container.innerHTML = data?.circuit_diagram || "No circuit.";
 }
 
+export function renderOperations(data) {
+  const container = document.getElementById("operations-list");
+  if (!container) return;
+
+  const operations = Array.isArray(data?.operations) ? data.operations : [];
+  container.innerHTML = "";
+  if (!operations.length) {
+    container.textContent = "Input state.";
+    return;
+  }
+
+  for (const operation of operations) {
+    const item = document.createElement("span");
+    item.className = "operation-chip";
+    item.textContent = `${operation.id}. ${operation.label || operation.gate}`;
+    container.appendChild(item);
+  }
+}
+
 export function renderTimeline(data, state) {
   const input = document.getElementById("history-marker");
   const label = document.getElementById("history-label");

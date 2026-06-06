@@ -6,7 +6,7 @@ Static frontend for the Quantum Correlation Flows project.
 
 Currently expects QAG-compatible HTTP endpoints, including:
 
-`/graph_data`, `/get_state`, `/get_circuit`, `/get_operations`,
+`/graph_data`, `/get_state`, `/get_circuit`, `/get_operations`, `/timeline`,
 `/get_qubit_states`, `/set_qubit_state`, `/set_num_qubits`,
 `/update_operation_params`, `/reorder_operations`,
 `/reorder_operations_cross_qubit`, `/import_qasm`, `/export_qasm`,

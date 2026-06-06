@@ -6,6 +6,7 @@ import {
   renderBasisGrid,
   renderCircuit,
   renderGraphCaption,
+  renderOperations,
   renderPanelError,
   renderStatevector,
   renderTimeline,
@@ -194,8 +195,11 @@ async function refreshCircuit() {
   appendMarker(params);
   const suffix = params.toString() ? `?${params.toString()}` : "";
   try {
-    renderCircuit(await apiGet(`/get_circuit${suffix}`));
+    const data = await apiGet(`/get_circuit${suffix}`);
+    renderOperations(data);
+    renderCircuit(data);
   } catch (error) {
+    renderPanelError("operations-list", "Operations unavailable.");
     renderPanelError("circuit", "Circuit unavailable.");
     throw error;
   }
