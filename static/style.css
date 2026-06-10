@@ -224,6 +224,10 @@ pre {
   font-size: 12px;
 }
 
+.circuit-history {
+  margin-bottom: 10px;
+}
+
 #history-label {
   min-width: 0;
   overflow: hidden;
