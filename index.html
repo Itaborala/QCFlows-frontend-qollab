@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <link rel="stylesheet" href="static/style.css?v=circuit-history-1">
+  <link rel="stylesheet" href="static/style.css?v=collapsible-1">
 </head>
 <body>
   <div class="app-shell">
@@ -18,7 +18,7 @@
         <div id="status" class="status-pill">Connecting</div>
       </div>
 
-      <section class="tool-section">
+      <section class="tool-section" data-collapsible data-collapse-key="basis">
         <h2>Basis</h2>
         <div id="basis-control" class="segmented-control" aria-label="Basis">
           <button type="button" data-basis="z" class="active">Z</button>
@@ -27,7 +27,7 @@
         </div>
       </section>
 
-      <section class="tool-section">
+      <section class="tool-section" data-collapsible data-collapse-key="metric">
         <h2>Metric</h2>
         <div id="metric-control" class="segmented-control" aria-label="Line metric">
           <button type="button" data-metric="k" class="active">K</button>
@@ -36,7 +36,7 @@
         </div>
       </section>
 
-      <section class="tool-section">
+      <section class="tool-section" data-collapsible data-collapse-key="qubits">
         <h2>Qubits</h2>
         <label class="field-label" for="qubit-count">Count</label>
         <div class="inline-fields">
@@ -45,7 +45,7 @@
         </div>
       </section>
 
-      <section class="tool-section">
+      <section class="tool-section" data-collapsible data-collapse-key="single-qubit">
         <h2>Single Qubit</h2>
         <label class="field-label" for="single-qubit">Target</label>
         <input id="single-qubit" type="number" min="0" value="0">
@@ -66,7 +66,7 @@
         </div>
       </section>
 
-      <section class="tool-section">
+      <section class="tool-section" data-collapsible data-collapse-key="two-qubit">
         <h2>Two Qubit</h2>
         <div class="two-col">
           <label class="field-label" for="control-qubit">Control</label>
@@ -80,7 +80,7 @@
         </div>
       </section>
 
-      <section class="tool-section">
+      <section class="tool-section" data-collapsible data-collapse-key="circuit-actions">
         <h2>Circuit</h2>
         <div class="button-row">
           <button id="undo-gate" type="button">Undo</button>
@@ -98,7 +98,7 @@
         <div id="graph"></div>
       </section>
 
-      <section class="panel">
+      <section class="panel" data-collapsible data-collapse-key="metric-matrix">
         <div class="panel-header">
           <h2>Metric Matrix</h2>
           <span id="matrix-caption" class="muted">K</span>
@@ -112,7 +112,7 @@
         </div>
       </section>
 
-      <section class="panel">
+      <section class="panel" data-collapsible data-collapse-key="states">
         <div class="panel-header">
           <h2>States</h2>
           <span id="states-caption" class="muted">Amplitudes</span>
@@ -120,14 +120,14 @@
         <div id="basis-grid"></div>
       </section>
 
-      <section class="panel">
+      <section class="panel" data-collapsible data-collapse-key="statevector">
         <div class="panel-header">
           <h2>Statevector</h2>
         </div>
         <pre id="statevector">Loading...</pre>
       </section>
 
-      <section class="panel">
+      <section class="panel" data-collapsible data-collapse-key="circuit">
         <div class="panel-header">
           <h2>Circuit</h2>
           <button id="load-current-qasm" type="button" class="quiet-button">QASM</button>
@@ -143,7 +143,7 @@
         <div id="circuit">Loading...</div>
       </section>
 
-      <section class="panel qasm-panel">
+      <section class="panel qasm-panel" data-collapsible data-collapse-key="import-qasm">
         <div class="panel-header">
           <h2>Import QASM</h2>
           <button id="import-qasm" type="button">Load</button>
@@ -157,6 +157,6 @@ cx q[0],q[1];</textarea>
     </main>
   </div>
 
-  <script type="module" src="static/main.js?v=circuit-history-1"></script>
+  <script type="module" src="static/main.js?v=collapsible-1"></script>
 </body>
 </html>

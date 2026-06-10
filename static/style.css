@@ -144,6 +144,68 @@ pre {
   color: #334155;
 }
 
+.collapse-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.panel-header .collapse-heading {
+  flex: 1;
+}
+
+.collapse-toggle {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+  min-height: 26px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
+.collapse-toggle:hover {
+  border-color: var(--line);
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.collapse-icon {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translate(-1px, -1px);
+  transition: transform 120ms ease;
+}
+
+[data-collapsed="true"] .collapse-icon {
+  transform: rotate(-45deg);
+}
+
+.tool-section > .collapse-heading + .collapsible-content {
+  margin-top: 8px;
+}
+
+.collapsible-content[hidden] {
+  display: none;
+}
+
+.collapsible-content > .field-label:first-child {
+  margin-top: 0;
+}
+
+[data-collapsed="true"] > .panel-header {
+  margin-bottom: 0;
+}
+
+[data-collapsed="true"] > .panel-header > button:not(.collapse-toggle) {
+  display: none;
+}
+
 .field-label {
   display: block;
   margin: 10px 0 5px;

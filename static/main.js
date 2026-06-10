@@ -35,6 +35,7 @@ const twoGateRoutes = {
 };
 
 initGraph(handleGraphNodeClick);
+initCollapsibleSections();
 
 bindControls();
 setQubitInputs(appState.numQubits);
@@ -338,4 +339,125 @@ function bindSegmented(id, dataKey, handler) {
 function readInteger(id) {
   const value = Number.parseInt(document.getElementById(id).value, 10);
   return Number.isInteger(value) ? value : 0;
+}
+
+function initCollapsibleSections() {
+  document.querySelectorAll("[data-collapsible]").forEach((section, index) => {
+    const sourceHeader = section.querySelector(":scope > .panel-header") || section.querySelector(":scope > h2");
+    if (!sourceHeader) return;
+
+    const key = section.dataset.collapseKey || String(index);
+    const content = document.createElement("div");
+    content.className = "collapsible-content";
+    content.id = `collapse-${key}`;
+
+    const {anchor, heading, label} = prepareCollapseHeading(section, sourceHeader);
+    const toggle = createCollapseToggle(content.id);
+    heading.insertBefore(toggle, heading.firstChild);
+
+    let next = anchor.nextSibling;
+    while (next) {
+      const current = next;
+      next = next.nextSibling;
+      content.appendChild(current);
+    }
+    section.appendChild(content);
+
+    const stored = readCollapseState(key);
+    const collapsed = stored ?? section.dataset.collapseDefault === "closed";
+    setCollapsed(section, content, toggle, collapsed, label);
+
+    toggle.addEventListener("click", () => {
+      const nextCollapsed = section.dataset.collapsed !== "true";
+      setCollapsed(section, content, toggle, nextCollapsed, label);
+      writeCollapseState(key, nextCollapsed);
+      if (!nextCollapsed) refreshExpandedSection(section);
+    });
+  });
+}
+
+function prepareCollapseHeading(section, sourceHeader) {
+  if (sourceHeader.matches("h2")) {
+    const heading = document.createElement("div");
+    heading.className = "collapse-heading";
+    section.insertBefore(heading, sourceHeader);
+    heading.appendChild(sourceHeader);
+    return {
+      anchor: heading,
+      heading,
+      label: sourceHeader.textContent.trim() || "Section",
+    };
+  }
+
+  const title = sourceHeader.querySelector("h2");
+  const heading = document.createElement("div");
+  heading.className = "collapse-heading";
+  if (title) {
+    sourceHeader.insertBefore(heading, title);
+    heading.appendChild(title);
+  } else {
+    sourceHeader.insertBefore(heading, sourceHeader.firstChild);
+  }
+
+  return {
+    anchor: sourceHeader,
+    heading,
+    label: title?.textContent.trim() || "Section",
+  };
+}
+
+function createCollapseToggle(contentId) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "collapse-toggle";
+  button.setAttribute("aria-controls", contentId);
+
+  const icon = document.createElement("span");
+  icon.className = "collapse-icon";
+  icon.setAttribute("aria-hidden", "true");
+  button.appendChild(icon);
+  return button;
+}
+
+function setCollapsed(section, content, toggle, collapsed, label) {
+  section.dataset.collapsed = collapsed ? "true" : "false";
+  content.hidden = collapsed;
+  toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  const action = collapsed ? "Expand" : "Collapse";
+  toggle.setAttribute("aria-label", `${action} ${label}`);
+  toggle.title = `${action} ${label}`;
+}
+
+function refreshExpandedSection(section) {
+  requestAnimationFrame(() => {
+    if (section.querySelector("#metric-matrix")) {
+      renderMatrix(appState.graphData, appState);
+    }
+    if (section.querySelector("#graph")) {
+      renderGraph(appState.graphData, appState);
+    }
+  });
+}
+
+function readCollapseState(key) {
+  try {
+    const value = localStorage.getItem(collapseStorageKey(key));
+    if (value === "true") return true;
+    if (value === "false") return false;
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function writeCollapseState(key, collapsed) {
+  try {
+    localStorage.setItem(collapseStorageKey(key), collapsed ? "true" : "false");
+  } catch {
+    // Ignore storage failures; collapse state is still applied for the current session.
+  }
+}
+
+function collapseStorageKey(key) {
+  return `qcflows:collapse:${key}`;
 }
