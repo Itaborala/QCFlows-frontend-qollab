@@ -1,5 +1,5 @@
 import {apiGet, apiPost} from "./api.js";
-import {appState, setBasis, setMarker, setMetric, setNumQubits} from "./state.js";
+import {appState, setBasis, setMarker, setMetric, setNumQubits, setPendingGate} from "./state.js";
 import {initGraph, renderGraph} from "./graph.js";
 import {renderMatrix} from "./matrix.js";
 import {
@@ -34,9 +34,7 @@ const twoGateRoutes = {
   CZ: "/apply_cz",
 };
 
-initGraph(qubitId => {
-  document.getElementById("single-qubit").value = qubitId;
-});
+initGraph(handleGraphNodeClick);
 
 bindControls();
 setQubitInputs(appState.numQubits);
@@ -60,29 +58,29 @@ function bindControls() {
 
   document.querySelectorAll("[data-single-gate]").forEach(button => {
     button.addEventListener("click", () => {
-      const gate = button.dataset.singleGate;
-      const qubit = readInteger("single-qubit");
-      runAction(() => apiPost(singleGateRoutes[gate], {qubit_id: qubit}));
+      toggleGatePlacement({gate: button.dataset.singleGate, kind: "single"});
     });
   });
 
   document.querySelectorAll("[data-rotation-gate]").forEach(button => {
     button.addEventListener("click", () => {
-      const gate = button.dataset.rotationGate;
-      const qubit = readInteger("single-qubit");
-      const angle = Number.parseFloat(document.getElementById("rotation-angle").value);
-      runAction(() => apiPost(rotationRoutes[gate], {qubit_id: qubit, angle}));
+      toggleGatePlacement({gate: button.dataset.rotationGate, kind: "rotation"});
     });
   });
 
   document.querySelectorAll("[data-two-gate]").forEach(button => {
     button.addEventListener("click", () => {
-      const gate = button.dataset.twoGate;
-      const control = readInteger("control-qubit");
-      const target = readInteger("target-qubit");
-      runAction(() => apiPost(twoGateRoutes[gate], {control_id: control, target_id: target}));
+      toggleGatePlacement({gate: button.dataset.twoGate, kind: "two", control: null});
     });
   });
+
+  document.addEventListener("keydown", event => {
+    if (event.key !== "Escape" || !appState.pendingGate) return;
+    event.preventDefault();
+    clearPendingGate("Ready");
+  });
+
+  syncGateButtonState();
 
   document.getElementById("set-qubits").addEventListener("click", () => {
     const requested = readInteger("qubit-count");
@@ -210,10 +208,114 @@ async function runAction(action) {
     setStatus("Updating");
     await action();
     await refreshTimeline();
+    selectLatestMarker();
     await refreshAll();
+    return true;
   } catch (error) {
     setStatus(error.message, "error");
+    return false;
   }
+}
+
+async function handleGraphNodeClick(qubitId) {
+  const pending = appState.pendingGate;
+  const qubit = normalizeQubitId(qubitId);
+  document.getElementById("single-qubit").value = qubit;
+
+  if (!pending) return;
+
+  if (pending.kind === "single") {
+    const ok = await runAction(() => apiPost(singleGateRoutes[pending.gate], {qubit_id: qubit}));
+    if (ok) clearPendingGate("Ready");
+    return;
+  }
+
+  if (pending.kind === "rotation") {
+    const angle = Number.parseFloat(document.getElementById("rotation-angle").value);
+    const ok = await runAction(() => apiPost(rotationRoutes[pending.gate], {qubit_id: qubit, angle}));
+    if (ok) clearPendingGate("Ready");
+    return;
+  }
+
+  if (pending.kind === "two") {
+    if (pending.control === null || pending.control === undefined) {
+      document.getElementById("control-qubit").value = qubit;
+      setPendingGate({...pending, control: qubit});
+      syncGateButtonState();
+      renderGraph(appState.graphData, appState);
+      setStatus(gatePlacementPrompt(appState.pendingGate));
+      return;
+    }
+
+    if (sameQubit(pending.control, qubit)) {
+      setStatus(`${pending.gate} target must differ from control.`, "error");
+      return;
+    }
+
+    document.getElementById("target-qubit").value = qubit;
+    const control = normalizeQubitId(pending.control);
+    const ok = await runAction(() => apiPost(twoGateRoutes[pending.gate], {
+      control_id: control,
+      target_id: qubit,
+    }));
+    if (ok) clearPendingGate("Ready");
+  }
+}
+
+function toggleGatePlacement(nextGate) {
+  const pending = appState.pendingGate;
+  if (pending?.gate === nextGate.gate && pending?.kind === nextGate.kind) {
+    clearPendingGate("Ready");
+    return;
+  }
+
+  setPendingGate(nextGate);
+  syncGateButtonState();
+  renderGraph(appState.graphData, appState);
+  setStatus(gatePlacementPrompt(appState.pendingGate));
+}
+
+function clearPendingGate(message = "") {
+  setPendingGate(null);
+  syncGateButtonState();
+  renderGraph(appState.graphData, appState);
+  if (message) setStatus(message, message === "Ready" ? "ok" : "neutral");
+}
+
+function syncGateButtonState() {
+  document.querySelectorAll("[data-single-gate], [data-rotation-gate], [data-two-gate]").forEach(button => {
+    const gate = button.dataset.singleGate || button.dataset.rotationGate || button.dataset.twoGate;
+    const active = appState.pendingGate?.gate === gate;
+    button.classList.toggle("active-tool", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+}
+
+function gatePlacementPrompt(pending) {
+  if (!pending) return "Ready";
+  if (pending.kind === "two" && pending.control !== null && pending.control !== undefined) {
+    return `${pending.gate} control q${pending.control}; click a different target node.`;
+  }
+  if (pending.kind === "two") {
+    return `${pending.gate} selected; click the control qubit node.`;
+  }
+  return `${pending.gate} selected; click a qubit node.`;
+}
+
+function normalizeQubitId(qubitId) {
+  const value = Number.parseInt(qubitId, 10);
+  return Number.isInteger(value) ? value : 0;
+}
+
+function sameQubit(first, second) {
+  return String(first) === String(second);
+}
+
+function selectLatestMarker() {
+  const current = appState.timelineData?.current_marker;
+  if (!Number.isInteger(Number(current))) return;
+  setMarker(current);
+  renderTimeline(appState.timelineData, appState);
 }
 
 function appendMarker(params) {

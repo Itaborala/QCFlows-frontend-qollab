@@ -59,11 +59,15 @@ export function initGraph(onNodeSelect) {
 export function renderGraph(data, state) {
   if (!svg || !simulation) return;
   if (!data || !Array.isArray(data.nodes)) {
-    d3.select("#graph").classed("is-empty", true);
+    d3.select("#graph")
+      .classed("is-empty", true)
+      .classed("placement-active", false);
     return;
   }
 
-  d3.select("#graph").classed("is-empty", false);
+  d3.select("#graph")
+    .classed("is-empty", false)
+    .classed("placement-active", Boolean(state?.pendingGate));
   const nodes = mergeNodes(simulation.nodes(), data.nodes.map(node => ({...node})));
   const edges = (data.edges || []).map(edge => ({...edge}));
   const scaleMax = metricMax(data);
@@ -100,6 +104,8 @@ export function renderGraph(data, state) {
   const nodeEnter = node.enter()
     .append("g")
     .attr("class", "node-group")
+    .attr("role", "button")
+    .attr("tabindex", 0)
     .call(d3.drag()
       .on("start", dragStarted)
       .on("drag", dragged)
@@ -117,15 +123,25 @@ export function renderGraph(data, state) {
   nodeEnter.append("title");
 
   nodeEnter.on("click", (event, d) => {
+    if (event.defaultPrevented) return;
+    handleNodeSelect?.(d.id);
+  });
+  nodeEnter.on("keydown", (event, d) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
     handleNodeSelect?.(d.id);
   });
 
   const allNodes = nodeEnter.merge(node);
+  allNodes
+    .classed("placement-target", d => isPlacementTarget(d, state))
+    .classed("pending-origin", d => isPendingOrigin(d, state))
+    .attr("aria-label", d => nodeAriaLabel(d, state));
   allNodes.select("circle")
     .attr("fill", d => d3.interpolateBlues(Number(d.prob0 ?? 0.5)))
     .attr("stroke", "#0f172a");
   allNodes.select("title")
-    .text(d => `Qubit ${d.id}\nP(0) = ${Number(d.prob0 ?? 0).toFixed(3)}`);
+    .text(d => nodeTitle(d, state));
 
   node.exit().remove();
 
@@ -157,18 +173,63 @@ function nodeId(node) {
   return typeof node === "object" ? node.id : node;
 }
 
+function isPlacementTarget(node, state) {
+  const pending = state?.pendingGate;
+  if (!pending) return false;
+  if (pending.kind === "two" && pending.control !== null && pending.control !== undefined) {
+    return !sameId(node.id, pending.control);
+  }
+  return true;
+}
+
+function isPendingOrigin(node, state) {
+  const pending = state?.pendingGate;
+  return pending?.kind === "two" &&
+    pending.control !== null &&
+    pending.control !== undefined &&
+    sameId(node.id, pending.control);
+}
+
+function nodeTitle(node, state) {
+  const base = `Qubit ${node.id}\nP(0) = ${Number(node.prob0 ?? 0).toFixed(3)}`;
+  const pending = state?.pendingGate;
+  if (!pending) return base;
+  if (isPendingOrigin(node, state)) return `${base}\n${pending.gate} control selected`;
+  if (isPlacementTarget(node, state)) return `${base}\nPlace ${pending.gate} here`;
+  return base;
+}
+
+function nodeAriaLabel(node, state) {
+  const pending = state?.pendingGate;
+  if (!pending) return `Select qubit ${node.id}`;
+  if (isPendingOrigin(node, state)) return `Qubit ${node.id}, ${pending.gate} control selected`;
+  if (isPlacementTarget(node, state)) return `Place ${pending.gate} on qubit ${node.id}`;
+  return `Qubit ${node.id}`;
+}
+
+function sameId(first, second) {
+  return String(first) === String(second);
+}
+
+function placementActive() {
+  return d3.select("#graph").classed("placement-active");
+}
+
 function dragStarted(event, d) {
+  if (placementActive()) return;
   if (!event.active) simulation.alphaTarget(0.3);
   d.fx = d.x;
   d.fy = d.y;
 }
 
 function dragged(event, d) {
+  if (placementActive()) return;
   d.fx = event.x;
   d.fy = event.y;
 }
 
 function dragEnded(event, d) {
+  if (placementActive()) return;
   if (!event.active) simulation.alphaTarget(0);
   d.fx = null;
   d.fy = null;

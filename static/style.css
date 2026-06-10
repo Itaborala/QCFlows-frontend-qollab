@@ -46,6 +46,17 @@ button:hover {
   background: var(--panel-soft);
 }
 
+button.active-tool {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.12);
+}
+
+button.active-tool:hover {
+  background: #99f6e4;
+}
+
 input,
 textarea {
   width: 100%;
@@ -290,6 +301,40 @@ pre {
 
 .node-group {
   cursor: pointer;
+  outline: none;
+}
+
+#graph.placement-active .node-group {
+  cursor: copy;
+}
+
+.node-group.placement-target .node {
+  stroke: var(--accent);
+  stroke-dasharray: 5 4;
+  stroke-width: 3px;
+}
+
+.node-group.placement-target:hover .node,
+.node-group.placement-target:focus-visible .node {
+  fill: var(--accent-soft) !important;
+  filter: drop-shadow(0 0 10px rgba(15, 118, 110, 0.28));
+}
+
+.node-group.pending-origin {
+  cursor: not-allowed;
+}
+
+.node-group.pending-origin .node {
+  fill: #fef3c7 !important;
+  stroke: #d97706;
+  stroke-dasharray: none;
+  stroke-width: 3px;
+}
+
+.node-group:focus-visible .node {
+  stroke: var(--accent);
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 8px rgba(15, 118, 110, 0.24));
 }
 
 .node-label {

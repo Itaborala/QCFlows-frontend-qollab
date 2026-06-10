@@ -6,6 +6,7 @@ export const appState = {
   graphData: null,
   stateData: null,
   timelineData: null,
+  pendingGate: null,
 };
 
 export function setBasis(basis) {
@@ -32,4 +33,8 @@ export function setNumQubits(numQubits) {
   if (Number.isInteger(next) && next > 0) {
     appState.numQubits = next;
   }
+}
+
+export function setPendingGate(pendingGate) {
+  appState.pendingGate = pendingGate ? {...pendingGate} : null;
 }
