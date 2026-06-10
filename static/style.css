@@ -216,8 +216,7 @@ pre {
 
 .inline-fields,
 .button-row,
-.button-grid,
-.two-col {
+.button-grid {
   display: grid;
   gap: 8px;
 }
@@ -237,10 +236,6 @@ pre {
 
 .gate-grid {
   grid-template-columns: repeat(3, 1fr);
-}
-
-.two-col {
-  grid-template-columns: 1fr 1fr;
 }
 
 .segmented-control {

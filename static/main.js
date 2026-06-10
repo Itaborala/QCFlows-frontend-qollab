@@ -221,7 +221,6 @@ async function runAction(action) {
 async function handleGraphNodeClick(qubitId) {
   const pending = appState.pendingGate;
   const qubit = normalizeQubitId(qubitId);
-  document.getElementById("single-qubit").value = qubit;
 
   if (!pending) return;
 
@@ -240,7 +239,6 @@ async function handleGraphNodeClick(qubitId) {
 
   if (pending.kind === "two") {
     if (pending.control === null || pending.control === undefined) {
-      document.getElementById("control-qubit").value = qubit;
       setPendingGate({...pending, control: qubit});
       syncGateButtonState();
       renderGraph(appState.graphData, appState);
@@ -253,7 +251,6 @@ async function handleGraphNodeClick(qubitId) {
       return;
     }
 
-    document.getElementById("target-qubit").value = qubit;
     const control = normalizeQubitId(pending.control);
     const ok = await runAction(() => apiPost(twoGateRoutes[pending.gate], {
       control_id: control,

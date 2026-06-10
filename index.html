@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <link rel="stylesheet" href="static/style.css?v=collapsible-1">
+  <link rel="stylesheet" href="static/style.css?v=graph-gates-1">
 </head>
 <body>
   <div class="app-shell">
@@ -47,8 +47,6 @@
 
       <section class="tool-section" data-collapsible data-collapse-key="single-qubit">
         <h2>Single Qubit</h2>
-        <label class="field-label" for="single-qubit">Target</label>
-        <input id="single-qubit" type="number" min="0" value="0">
         <div class="button-grid gate-grid">
           <button type="button" data-single-gate="H">H</button>
           <button type="button" data-single-gate="X">X</button>
@@ -68,12 +66,6 @@
 
       <section class="tool-section" data-collapsible data-collapse-key="two-qubit">
         <h2>Two Qubit</h2>
-        <div class="two-col">
-          <label class="field-label" for="control-qubit">Control</label>
-          <label class="field-label" for="target-qubit">Target</label>
-          <input id="control-qubit" type="number" min="0" value="0">
-          <input id="target-qubit" type="number" min="0" value="1">
-        </div>
         <div class="button-grid">
           <button type="button" data-two-gate="CX">CX</button>
           <button type="button" data-two-gate="CZ">CZ</button>
@@ -157,6 +149,6 @@ cx q[0],q[1];</textarea>
     </main>
   </div>
 
-  <script type="module" src="static/main.js?v=collapsible-1"></script>
+  <script type="module" src="static/main.js?v=graph-gates-1"></script>
 </body>
 </html>

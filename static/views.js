@@ -114,10 +114,6 @@ export function renderPanelError(id, message) {
 export function setQubitInputs(numQubits) {
   document.getElementById("qubit-count").max = 12;
   document.getElementById("qubit-count").value = numQubits;
-  for (const id of ["single-qubit", "control-qubit", "target-qubit"]) {
-    const input = document.getElementById(id);
-    input.max = Math.max(0, numQubits - 1);
-  }
 }
 
 function formatComplex(value = [0, 0]) {
