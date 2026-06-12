@@ -1,5 +1,5 @@
 import {apiGet, apiPost} from "./api.js";
-import {appState, setBasis, setMarker, setMetric, setNumQubits, setPendingGate} from "./state.js";
+import {appState, setBasis, setMarker, setMetric, setNumQubits, setPendingGate, appendOp, removeLastOp, resetOps, loadPersisted, clearStale} from "./state.js";
 import {initGraph, renderGraph} from "./graph.js";
 import {renderMatrix} from "./matrix.js";
 import {
@@ -44,17 +44,25 @@ initialize();
 function bindControls() {
   bindSegmented("basis-control", "basis", value => {
     setBasis(value);
-    refreshAll();
+    appState.results = appState.resultsByBasis[value] || [];
+    syncSlider();
+    renderActiveMarker();
+    //refreshAll();
+    //runSimulation();
   });
   bindSegmented("metric-control", "metric", value => {
     setMetric(value);
     refreshGraph();
   });
 
+  document.getElementById("run-circuit").addEventListener("click", runSimulation);
+
+
   document.getElementById("history-marker").addEventListener("input", event => {
     setMarker(event.target.value);
-    renderTimeline(appState.timelineData, appState);
-    refreshAll();
+    //renderTimeline(appState.timelineData, appState);
+    //refreshAll();
+    renderActiveMarker();
   });
 
   document.querySelectorAll("[data-single-gate]").forEach(button => {
@@ -85,19 +93,26 @@ function bindControls() {
 
   document.getElementById("set-qubits").addEventListener("click", () => {
     const requested = readInteger("qubit-count");
-    runAction(async () => {
-      const result = await apiPost("/set_num_qubits", {num_qubits: requested});
-      setNumQubits(result.num_qubits || requested);
-      setQubitInputs(appState.numQubits);
-    });
+    //runAction(async () => {
+      //const result = await apiPost("/set_num_qubits", {num_qubits: requested});
+      //setNumQubits(result.num_qubits || requested);
+      //setQubitInputs(appState.numQubits);
+    //});
+    setNumQubits(requested);
+    setQubitInputs(appState.numQubits);
+    afterEdit();
   });
 
   document.getElementById("undo-gate").addEventListener("click", () => {
-    runAction(() => apiPost("/remove_last_gate"));
+    //runAction(() => apiPost("/remove_last_gate"));
+    removeLastOp();
+    afterEdit();
   });
 
   document.getElementById("reset-circuit").addEventListener("click", () => {
-    runAction(() => apiPost("/reset_circuit"));
+    //runAction(() => apiPost("/reset_circuit"));
+    resetOps();
+    afterEdit();
   });
 
   document.getElementById("import-qasm").addEventListener("click", () => {
@@ -134,10 +149,21 @@ async function refreshAll() {
   setStatus(failed.length ? "Backend missing" : "Ready", failed.length ? "error" : "ok");
 }
 
-async function initialize() {
-  await refreshTimeline();
-  await refreshAll();
+function initialize() {
+  loadPersisted();
+  setQubitInputs(appState.numQubits);
+  syncBasisControl();
+  renderOperations(appState.operations);
+  renderCircuit(appState.operations, appState.numQubits);
+  syncSlider();
+  renderActiveMarker();
+  renderStale();
 }
+
+//async function initialize() {
+  //await refreshTimeline();
+  //await refreshAll();
+//}
 
 async function refreshTimeline() {
   try {
@@ -225,15 +251,19 @@ async function handleGraphNodeClick(qubitId) {
   if (!pending) return;
 
   if (pending.kind === "single") {
-    const ok = await runAction(() => apiPost(singleGateRoutes[pending.gate], {qubit_id: qubit}));
-    if (ok) clearPendingGate("Ready");
+    //const ok = await runAction(() => apiPost(singleGateRoutes[pending.gate], {qubit_id: qubit}));
+    appendOp({gate: pending.gate.toLowerCase(), qubits: [qubit], params: {}});
+    afterEdit();
+    clearPendingGate("Ready");
     return;
   }
 
   if (pending.kind === "rotation") {
     const angle = Number.parseFloat(document.getElementById("rotation-angle").value);
-    const ok = await runAction(() => apiPost(rotationRoutes[pending.gate], {qubit_id: qubit, angle}));
-    if (ok) clearPendingGate("Ready");
+    //const ok = await runAction(() => apiPost(rotationRoutes[pending.gate], {qubit_id: qubit, angle}));
+    appendOp({gate: pending.gate.toLowerCase(), qubits: [qubit], params: {angle}});
+    afterEdit();
+    clearPendingGate("Ready");
     return;
   }
 
@@ -252,11 +282,13 @@ async function handleGraphNodeClick(qubitId) {
     }
 
     const control = normalizeQubitId(pending.control);
-    const ok = await runAction(() => apiPost(twoGateRoutes[pending.gate], {
-      control_id: control,
-      target_id: qubit,
-    }));
-    if (ok) clearPendingGate("Ready");
+    //const ok = await runAction(() => apiPost(twoGateRoutes[pending.gate], {
+      //control_id: control,
+      //target_id: qubit,
+    //}));
+    appendOp({gate: pending.gate.toLowerCase(), qubits: [control, qubit], params: {}});
+    afterEdit();
+    clearPendingGate("Ready");
   }
 }
 
@@ -321,6 +353,97 @@ function appendMarker(params) {
     params.set("marker", String(appState.marker));
   }
 }
+
+
+function afterEdit() {
+  renderOperations(appState.operations);
+  renderCircuit(appState.operations, appState.numQubits);
+  renderActiveMarker();
+  renderStale();
+}
+
+
+function placeholderGraph() {
+  return {
+    nodes: Array.from({length: appState.numQubits}, (_, index) => ({id: index})),
+    edges: [],
+  };
+}
+
+function renderActiveMarker() {
+  const marker = appState.marker ?? appState.operations?.length ?? 0;
+  appState.graphData = appState.results.find(result => result.marker === marker) || placeholderGraph();
+  renderGraph(appState.graphData, appState);
+  renderMatrix(appState.graphData, appState);
+  renderGraphCaption(appState, appState.graphData);
+  renderStatevector(appState.graphData);
+  renderBasisGrid(appState.graphData);
+}
+
+async function runSimulation() {
+  setStatus("Running");
+  try {
+    const data = await apiPost("/simulate", {
+      num_qubits: appState.numQubits,
+      operations: appState.operations,
+      all_bases: true,
+      //basis: appState.basis,
+      // markers omitted -> backend return all 0..len
+    });
+    appState.resultsByBasis = data.results_by_basis || {};
+    appState.results = appState.resultsByBasis[appState.basis] || [];
+    setMarker(appState.operations.length);
+    clearStale();
+    syncSlider();
+    renderActiveMarker();
+    renderStale();
+    setStatus("Ready", "ok");
+  } catch (error) {
+    setStatus(error.message, "error"); // 502 = api could not reach interface
+  }
+}
+
+function syncSlider() {
+  const input = document.getElementById("history-marker");
+  const label = document.getElementById("history-label");
+  const count = document.getElementById("history-count");
+
+  const markers = appState.results.map(result => result.marker);
+  if (!markers.length) {
+    input.disabled = true;
+    input.min = 0;
+    input.max = 0;
+    input.value = 0;
+    label.textContent = "Latest";
+    count.textContent = "-";
+    return;
+  }
+
+  const max = Math.max(...markers);
+  const current = appState.marker ?? max;
+  input.disabled = false;
+  input.min = Math.min(...markers);
+  input.max = max;
+  input.step = 1;
+  input.value = current;
+  label.textContent = `Marker ${current}`;
+  count.textContent = `${current} / ${max}`;
+}
+
+
+function renderStale() {
+  const hint = document.getElementById("circuit-stale");
+  if (hint) hint.hidden = !appState.stale;
+  const run = document.getElementById("run-circuit");
+  if (run) run.classList.toggle("needs-run", appState.stale);
+}
+
+function syncBasisControl() {
+  document.querySelectorAll("#basis-control button").forEach(button => {
+    button.classList.toggle("active", button.dataset.basis === appState.basis);
+  });
+}
+
 
 function bindSegmented(id, dataKey, handler) {
   document.getElementById(id).addEventListener("click", event => {

@@ -122,7 +122,11 @@
       <section class="panel" data-collapsible data-collapse-key="circuit">
         <div class="panel-header">
           <h2>Circuit</h2>
-          <button id="load-current-qasm" type="button" class="quiet-button">QASM</button>
+          <div class="header-actions">
+            <span id="circuit-stale" class="stale-hint" hidden>Circuit Updated - press Run</span>
+            <button id="run-circuit" type="button">Run</button>
+            <button id="load-current-qasm" type="button" class="quiet-button">QASM</button>
+          </div>
         </div>
         <div class="history-control circuit-history">
           <input id="history-marker" type="range" min="0" max="0" step="1" value="0" disabled>

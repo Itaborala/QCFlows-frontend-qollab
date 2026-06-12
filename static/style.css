@@ -155,6 +155,24 @@ pre {
   flex: 1;
 }
 
+.header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.stale-hint {
+  color: var(--warn);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#run-circuit.needs-run {
+  border-color: var(--warn);
+  background: var(--warn);
+  color: #fff;
+}
+
 .collapse-toggle {
   display: grid;
   place-items: center;
@@ -472,6 +490,11 @@ pre {
   padding: 10px;
   font-size: 13px;
   line-height: 1.45;
+}
+
+
+#circuit {
+  white-space: pre;
 }
 
 .operations-list {

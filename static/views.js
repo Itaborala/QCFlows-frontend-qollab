@@ -1,3 +1,5 @@
+const GATE_SYMBOL = {h: "H", x: "X", y: "Y", z: "Z", cx: "CX", cy: "CY", cz: "CZ", swap: "SWAP"};
+
 export function setStatus(message, tone = "neutral") {
   const status = document.getElementById("status");
   status.textContent = message;
@@ -11,28 +13,109 @@ export function renderGraphCaption(state, data) {
   caption.textContent = `${metric}, ${state.basis.toUpperCase()} basis${markerLabel}`;
 }
 
-export function renderCircuit(data) {
+//export function renderCircuit(data) {
+  //const container = document.getElementById("circuit");
+  //container.innerHTML = data?.circuit_diagram || "No circuit.";
+//}
+
+export function renderCircuit(operations, numQubits) {
   const container = document.getElementById("circuit");
-  container.innerHTML = data?.circuit_diagram || "No circuit.";
+  if (!container) return;
+
+  const n = Math.max(numQubits, 1);
+  const rowCount = 2 * n - 1;
+  const labelWidth = `q${n - 1}: `.length;
+
+
+  const lines = Array.from({length: rowCount}, (_, r) => 
+    r % 2 === 0 ? `q${r / 2}: `.padEnd(labelWidth, " ") : " ".repeat(labelWidth)
+  );
+
+  const columns = operations.map(op => buildColumn(op, n));
+  if (!columns.length) {
+    for (let r = 0; r < rowCount; r++) {
+      if (r % 2 === 0) lines[r] += "─".repeat(3);
+    }
+  }
+  for (const col of columns) {
+    for (let r = 0; r < rowCount; r++) {
+      lines[r] += r % 2 === 0 ? col.wire[r / 2] : col.gap[(r - 1) / 2];
+    }
+  }
+
+  container.textContent = lines.join("\n");
 }
 
-export function renderOperations(data) {
+function buildColumn(op, n) {
+  const labels = Array.from({length: n}, () => "");
+  const connect = Array.from({length: Math.max(0, n - 1)}, () => false);
+
+    if (op.qubits.length === 1) {
+      const sym = GATE_SYMBOL[op.gate] || op.gate.toUpperCase();
+      labels[op.qubits[0]] = ` ${sym} `;
+  } else {
+    const [control, target] = op.qubits;
+    labels[control] = "\u25CF";                                  // ● control
+    labels[target] = op.gate === "cz" ? " Z " : " X ";
+    const lo = Math.min(control, target);
+    const hi = Math.max(control, target);
+    for (let g = lo; g < hi; g++) connect[g] = true;
+  }
+
+  const width = Math.max(1, ...labels.map(s => s.length)) + 2;
+  const center = Math.floor(width / 2);
+
+  const wire = labels.map(s => {
+    if (!s) return "\u2500".repeat(width);                       // ─ fill
+    const pad = width - s.length;
+    const left = Math.floor(pad / 2);
+    return "\u2500".repeat(left) + s + "\u2500".repeat(pad - left);
+  });
+
+  const gap = connect.map(on => {
+    if (!on) return " ".repeat(width);
+    const cells = Array.from({length: width}, () => " ");
+    cells[center] = "\u2502";                                    // │ connector
+    return cells.join("");
+  });
+
+  return {wire, gap};
+}
+
+
+export function renderOperations(operations) {
   const container = document.getElementById("operations-list");
   if (!container) return;
 
-  const operations = Array.isArray(data?.operations) ? data.operations : [];
+  //const operations = Array.isArray(data?.operations) ? data.operations : [];
   container.innerHTML = "";
   if (!operations.length) {
     container.textContent = "Input state.";
     return;
   }
+  operations.forEach((op, index) => {
+    const chip = document.createElement("span");
+    chip.className = "operation-chip";
+    chip.textContent = formatOperation(op, index + 1);
+    container.appendChild(chip);
+  });
+}
 
-  for (const operation of operations) {
-    const item = document.createElement("span");
-    item.className = "operation-chip";
-    item.textContent = `${operation.id}. ${operation.label || operation.gate}`;
-    container.appendChild(item);
-  }
+  //for (const operation of operations) {
+    //const item = document.createElement("span");
+    //item.className = "operation-chip";
+    //item.textContent = `${operation.id}. ${operation.label || operation.gate}`;
+    //container.appendChild(item);
+  //}
+//}
+
+function formatOperation(op, index) {
+  const gate = op.gate.toUpperCase();
+  const qubits = op.qubits.join(",");
+  const angle = op.params?.angle;
+  return angle != null
+    ? `${index}. ${gate}(${Number(angle).toFixed(3)})[${qubits}]`
+    : `${index}. ${gate}[${qubits}]`;
 }
 
 export function renderTimeline(data, state) {
@@ -126,6 +209,6 @@ function formatComplex(value = [0, 0]) {
 
 function bitCount(amplitudes) {
   const first = amplitudes[0]?.basis_state || "|0>";
-  const match = first.match(/[01]+/);
-  return match ? match[0].length : 1;
+  const match = first.match(/\|(.+)>/);
+  return match ? match[1].length : 1;
 }
