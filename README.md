@@ -1,3 +1,4 @@
-# QCFlows-frontend-qollab
+# QCFlows Frontend
+
 [https://app.qcflows.net/](https://app.qcflows.net/)
-The User Interface for the Quantum Correlation Flows project
+Static frontend for the Quantum Correlation Flows project.
