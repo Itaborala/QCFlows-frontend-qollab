@@ -173,6 +173,7 @@ function initialize() {
   syncSlider();
   renderActiveMarker();
   renderStale();
+  checkConnection();
 }
 
 //async function initialize() {
