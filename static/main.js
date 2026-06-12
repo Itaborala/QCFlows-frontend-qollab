@@ -180,6 +180,15 @@ function initialize() {
   //await refreshAll();
 //}
 
+async function checkConnection() {
+  try {
+    await apiGet("/health");
+    setStatus("Ready", "ok");
+  } catch (error) {
+    setStatus(error.message, "error");
+  }
+}
+
 async function refreshTimeline() {
   try {
     const data = await apiGet("/timeline");
