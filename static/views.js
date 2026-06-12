@@ -1,4 +1,5 @@
 const GATE_SYMBOL = {h: "H", x: "X", y: "Y", z: "Z", cx: "CX", cy: "CY", cz: "CZ", swap: "SWAP"};
+const CONTROLLED_TARGET = {cx: "X", cz: "Z", crx: "RX", cry: "RY", crz: "RZ"};
 
 export function setStatus(message, tone = "neutral") {
   const status = document.getElementById("status");
@@ -49,21 +50,27 @@ export function renderCircuit(operations, numQubits) {
 function buildColumn(op, n) {
   const labels = Array.from({length: n}, () => "");
   const connect = Array.from({length: Math.max(0, n - 1)}, () => false);
+  let controlQubit = null;
 
     if (op.qubits.length === 1) {
       const sym = GATE_SYMBOL[op.gate] || op.gate.toUpperCase();
       labels[op.qubits[0]] = ` ${sym} `;
   } else {
     const [control, target] = op.qubits;
+    controlQubit = control;
     labels[control] = "\u25CF";                                  // ● control
-    labels[target] = op.gate === "cz" ? " Z " : " X ";
+    labels[target] = ` ${CONTROLLED_TARGET[op.gate] || "X"} `;  // target
     const lo = Math.min(control, target);
     const hi = Math.max(control, target);
     for (let g = lo; g < hi; g++) connect[g] = true;
   }
 
   const width = Math.max(1, ...labels.map(s => s.length)) + 2;
-  const center = Math.floor(width / 2);
+  //const center = Math.floor(width / 2);
+
+  const connectorCol = controlQubit === null
+    ? Math.floor(width / 2)
+    : Math.floor((width - labels[controlQubit].length) / 2);
 
   const wire = labels.map(s => {
     if (!s) return "\u2500".repeat(width);                       // ─ fill
@@ -75,7 +82,7 @@ function buildColumn(op, n) {
   const gap = connect.map(on => {
     if (!on) return " ".repeat(width);
     const cells = Array.from({length: width}, () => " ");
-    cells[center] = "\u2502";                                    // │ connector
+    cells[connectorCol] = "\u2502";                                    // │ connector
     return cells.join("");
   });
 
