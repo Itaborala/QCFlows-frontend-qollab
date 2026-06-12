@@ -144,9 +144,9 @@
           <h2>Import QASM</h2>
           <button id="import-qasm" type="button">Load</button>
         </div>
-        <textarea id="qasm-input" spellcheck="false">OPENQASM 2.0;
-include "qelib1.inc";
-qreg q[5];
+        <textarea id="qasm-input" spellcheck="false">OPENQASM 3.0;
+include "stdgates.inc";
+qubit[5] q;
 h q[0];
 cx q[0],q[1];</textarea>
       </section>

@@ -115,21 +115,33 @@ function bindControls() {
     afterEdit();
   });
 
-  document.getElementById("import-qasm").addEventListener("click", () => {
+  document.getElementById("import-qasm").addEventListener("click", async () => {
     const qasm = document.getElementById("qasm-input").value;
-    runAction(async () => {
+    try {
+      setStatus("Importing QASM");
       const result = await apiPost("/import_qasm", {qasm});
-      if (result.num_qubits) {
-        setNumQubits(result.num_qubits);
-        setQubitInputs(appState.numQubits);
-      }
-    });
+      setNumQubits(result.num_qubits);
+      appState.operations = result.operations;
+      setQubitInputs(appState.numQubits);
+      afterEdit();
+      setStatus("Ready", "ok");
+    } catch (error) {
+      setStatus(error.message, "error");
+    }
+    //runAction(async () => {
+      //const result = await apiPost("/import_qasm", {qasm});
+      //if (result.num_qubits) {
+        //setNumQubits(result.num_qubits);
+        //setQubitInputs(appState.numQubits);
+      //}
+    //});
   });
 
   document.getElementById("load-current-qasm").addEventListener("click", async () => {
     try {
       setStatus("Loading QASM");
-      const result = await apiGet("/export_qasm");
+      //const result = await apiGet("/export_qasm");
+      const result = await apiPost("/export_qasm", {num_qubits: appState.numQubits, operations: appState.operations});
       document.getElementById("qasm-input").value = result.qasm || "";
       setStatus("Ready", "ok");
     } catch (error) {
