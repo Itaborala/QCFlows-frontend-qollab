@@ -7,7 +7,7 @@ export const appState = {
   numQubits: 5,
   operations: [],
   results: [],
-  resultsByBasis: {},
+  resultsBy: {},
   graphData: null,
   stale: true,
   stateData: null,
@@ -38,6 +38,7 @@ export function setBasis(basis) {
 
 export function setMetric(metric) {
   appState.metric = metric;
+  persist();
 }
 
 export function setMarker(marker) {
@@ -57,7 +58,7 @@ export function setNumQubits(numQubits) {
     appState.numQubits = next;
     appState.operations = [];
     appState.results = [];
-    appState.resultsByBasis = {};
+    appState.resultsBy = {};
     appState.marker = null;
     markStale();
   }
@@ -82,6 +83,7 @@ function persist() {
       operations: appState.operations,
       numQubits: appState.numQubits,
       basis: appState.basis,
+      metric: appState.metric,
     }));
   } catch (e) {
     console.warn("Failed to persist state", e);
@@ -95,6 +97,7 @@ export function loadPersisted() {
     if (Array.isArray(saved.operations)) appState.operations = saved.operations;
     if (saved.numQubits) appState.numQubits = saved.numQubits;
     if (saved.basis) appState.basis = saved.basis;
+    if (saved.metric) appState.metric = saved.metric;
   } catch (e) {
     console.warn("Failed to load persisted state", e);
   }

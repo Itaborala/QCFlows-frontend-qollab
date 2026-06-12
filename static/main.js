@@ -44,15 +44,17 @@ initialize();
 function bindControls() {
   bindSegmented("basis-control", "basis", value => {
     setBasis(value);
-    appState.results = appState.resultsByBasis[value] || [];
+    appState.results = (appState.resultsBy[appState.metric] || {})[value] || [];
     syncSlider();
     renderActiveMarker();
     //refreshAll();
-    //runSimulation();
   });
   bindSegmented("metric-control", "metric", value => {
     setMetric(value);
-    refreshGraph();
+    appState.results = (appState.resultsBy[value] || {})[appState.basis] || [];
+    syncSlider();
+    renderActiveMarker();
+    //refreshGraph();
   });
 
   document.getElementById("run-circuit").addEventListener("click", runSimulation);
@@ -165,6 +167,7 @@ function initialize() {
   loadPersisted();
   setQubitInputs(appState.numQubits);
   syncBasisControl();
+  syncMetricControl();
   renderOperations(appState.operations);
   renderCircuit(appState.operations, appState.numQubits);
   syncSlider();
@@ -398,12 +401,12 @@ async function runSimulation() {
     const data = await apiPost("/simulate", {
       num_qubits: appState.numQubits,
       operations: appState.operations,
-      all_bases: true,
+      all_metrics: true,
       //basis: appState.basis,
       // markers omitted -> backend return all 0..len
     });
-    appState.resultsByBasis = data.results_by_basis || {};
-    appState.results = appState.resultsByBasis[appState.basis] || [];
+    appState.resultsBy = data.results_by_metric_basis || {};
+    appState.results = (appState.resultsBy[appState.metric] || {})[appState.basis] || [];
     setMarker(appState.operations.length);
     clearStale();
     syncSlider();
@@ -456,6 +459,11 @@ function syncBasisControl() {
   });
 }
 
+function syncMetricControl() {
+  document.querySelectorAll("#metric-control button").forEach(button => {
+    button.classList.toggle("active", button.dataset.metric === appState.metric);
+  });
+}
 
 function bindSegmented(id, dataKey, handler) {
   document.getElementById(id).addEventListener("click", event => {
