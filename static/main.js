@@ -1,5 +1,22 @@
 import {apiGet, apiPost} from "./api.js";
-import {appState, setBasis, setMarker, setMetric, setNumQubits, setPendingGate, appendOp, removeLastOp, resetOps, loadPersisted, clearStale} from "./state.js";
+import {
+  appState,
+  setBasis,
+  setMarker,
+  setMetric,
+  setNumQubits,
+  setPendingGate,
+  appendOp,
+  removeLastOp,
+  resetOps,
+  loadPersisted,
+  clearStale,
+  markerStatus,
+  selectedMarkerIds,
+  dirtyMarkerIds,
+  toggleMarkerSelection,
+  markMarkersCached,
+} from "./state.js";
 import {initGraph, renderGraph} from "./graph.js";
 import {renderMatrix} from "./matrix.js";
 import {
@@ -66,6 +83,7 @@ function bindControls() {
     //renderTimeline(appState.timelineData, appState);
     //refreshAll();
     renderActiveMarker();
+    renderMarkerStrip();
   });
 
   document.querySelectorAll("[data-single-gate]").forEach(button => {
@@ -173,6 +191,7 @@ function initialize() {
   renderCircuit(appState.operations, appState.numQubits);
   syncSlider();
   renderActiveMarker();
+  renderMarkerStrip();
   renderStale();
   checkConnection();
 }
@@ -384,7 +403,9 @@ function appendMarker(params) {
 function afterEdit() {
   renderOperations(appState.operations);
   renderCircuit(appState.operations, appState.numQubits);
+  syncSlider();
   renderActiveMarker();
+  renderMarkerStrip();
   renderStale();
 }
 
@@ -408,25 +429,73 @@ function renderActiveMarker() {
 
 async function runSimulation() {
   setStatus("Running");
+  const selectedMarkers = selectedMarkerIds();
+  const pendingMarkers = dirtyMarkerIds();
+  if (selectedMarkers.length && !pendingMarkers.length) {
+    setStatus("Markers cached", "ok");
+    return;
+  }
+
+  const payload = {
+    num_qubits: appState.numQubits,
+    operations: appState.operations,
+    all_metrics: true,
+    //basis: appState.basis,
+  };
+  if (selectedMarkers.length) {
+    payload.markers = pendingMarkers;
+  }
+
   try {
-    const data = await apiPost("/simulate", {
-      num_qubits: appState.numQubits,
-      operations: appState.operations,
-      all_metrics: true,
-      //basis: appState.basis,
-      // markers omitted -> backend return all 0..len
-    });
-    appState.resultsBy = data.results_by_metric_basis || {};
+    const data = await apiPost("/simulate", payload);
+    const nextResults = data.results_by_metric_basis || {};
+    appState.resultsBy = selectedMarkers.length
+      ? mergeResultsByMarker(appState.resultsBy, nextResults)
+      : nextResults;
     appState.results = (appState.resultsBy[appState.metric] || {})[appState.basis] || [];
-    setMarker(appState.operations.length);
+    if (selectedMarkers.length) {
+      markMarkersCached(pendingMarkers);
+      setMarker(pendingMarkers[pendingMarkers.length - 1] ?? selectedMarkers[selectedMarkers.length - 1]);
+    } else {
+      setMarker(appState.operations.length);
+    }
     clearStale();
     syncSlider();
     renderActiveMarker();
+    renderMarkerStrip();
     renderStale();
     setStatus("Ready", "ok");
   } catch (error) {
     setStatus(error.message, "error"); // 502 = api could not reach interface
   }
+}
+
+function mergeResultsByMarker(current, incoming) {
+  const merged = {};
+  const metrics = new Set([
+    ...Object.keys(current || {}),
+    ...Object.keys(incoming || {}),
+  ]);
+
+  for (const metric of metrics) {
+    merged[metric] = {};
+    const bases = new Set([
+      ...Object.keys(current?.[metric] || {}),
+      ...Object.keys(incoming?.[metric] || {}),
+    ]);
+    for (const basis of bases) {
+      const byMarker = new Map();
+      for (const result of current?.[metric]?.[basis] || []) {
+        byMarker.set(Number(result.marker), result);
+      }
+      for (const result of incoming?.[metric]?.[basis] || []) {
+        byMarker.set(Number(result.marker), result);
+      }
+      merged[metric][basis] = Array.from(byMarker.values())
+        .sort((a, b) => Number(a.marker) - Number(b.marker));
+    }
+  }
+  return merged;
 }
 
 function syncSlider() {
@@ -454,6 +523,52 @@ function syncSlider() {
   input.value = current;
   label.textContent = `Marker ${current}`;
   count.textContent = `${current} / ${max}`;
+}
+
+function renderMarkerStrip() {
+  const strip = document.getElementById("marker-strip");
+  if (!strip) return;
+
+  strip.innerHTML = "";
+  const maxMarker = appState.operations.length;
+  const activeMarker = appState.marker ?? maxMarker;
+  for (let marker = 0; marker <= maxMarker; marker += 1) {
+    const status = markerStatus(marker);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "marker-button";
+    button.dataset.status = status;
+    button.classList.toggle("is-active", activeMarker === marker);
+    button.textContent = String(marker);
+    button.title = markerTitle(marker, status);
+    button.setAttribute("aria-pressed", status !== "unmarked" ? "true" : "false");
+    button.addEventListener("click", () => {
+      toggleMarkerSelection(marker, hasCachedResult(marker) ? "cached" : "dirty");
+      setMarker(marker);
+      syncSlider();
+      renderActiveMarker();
+      renderMarkerStrip();
+      renderStale();
+    });
+    strip.appendChild(button);
+  }
+}
+
+function markerTitle(marker, status) {
+  if (status === "cached") return `Marker ${marker}: cached`;
+  if (status === "dirty") return `Marker ${marker}: needs run`;
+  return `Marker ${marker}: not selected`;
+}
+
+function hasCachedResult(marker) {
+  for (const byBasis of Object.values(appState.resultsBy || {})) {
+    for (const results of Object.values(byBasis || {})) {
+      if (Array.isArray(results) && results.some(result => Number(result.marker) === marker)) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 
