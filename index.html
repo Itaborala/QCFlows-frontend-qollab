@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <link rel="stylesheet" href="static/style.css?v=graph-gates-1">
+  <link rel="stylesheet" href="static/style.css?v=layout-panels-1">
 </head>
 <body>
   <div class="app-shell">
@@ -29,10 +29,25 @@
 
       <section class="tool-section" data-collapsible data-collapse-key="metric">
         <h2>Metric</h2>
-        <div id="metric-control" class="segmented-control" aria-label="Line metric">
-          <button type="button" data-metric="k" class="active">K</button>
-          <button type="button" data-metric="eof">EoF</button>
-          <button type="button" data-metric="mi">MI</button>
+        <div class="metric-control-row">
+          <div id="metric-control" class="segmented-control" aria-label="Line metric">
+            <button type="button" data-metric="k" class="active">K</button>
+            <button type="button" data-metric="eof">EoF</button>
+            <button type="button" data-metric="mi">MI</button>
+          </div>
+          <a class="info-link" href="https://arxiv.org/abs/1909.12814" target="_blank" rel="noopener" aria-label="Open the K metric paper" title="Open the K metric paper">?</a>
+        </div>
+      </section>
+
+      <section class="tool-section" data-collapsible data-collapse-key="views">
+        <h2>Views</h2>
+        <div class="view-toggle-grid" aria-label="Visible panels">
+          <label class="check-option"><input type="checkbox" data-panel-toggle="graph" checked> <span>Graph</span></label>
+          <label class="check-option"><input type="checkbox" data-panel-toggle="circuit" checked> <span>Circuit</span></label>
+          <label class="check-option"><input type="checkbox" data-panel-toggle="qasm" checked> <span>QASM</span></label>
+          <label class="check-option"><input type="checkbox" data-panel-toggle="metric-matrix"> <span>K-matrix</span></label>
+          <label class="check-option"><input type="checkbox" data-panel-toggle="states"> <span>States</span></label>
+          <label class="check-option"><input type="checkbox" data-panel-toggle="statevector"> <span>Statevector</span></label>
         </div>
       </section>
 
@@ -82,7 +97,7 @@
     </aside>
 
     <main class="workspace">
-      <section class="panel graph-panel">
+      <section class="panel graph-panel" data-panel-key="graph">
         <div class="panel-header">
           <h2>Qubit Graph</h2>
           <span id="graph-caption" class="muted">K, Z basis</span>
@@ -90,7 +105,7 @@
         <div id="graph"></div>
       </section>
 
-      <section class="panel" data-collapsible data-collapse-key="metric-matrix">
+      <section class="panel metric-panel" data-collapsible data-collapse-key="metric-matrix" data-panel-key="metric-matrix">
         <div class="panel-header">
           <h2>Metric Matrix</h2>
           <span id="matrix-caption" class="muted">K</span>
@@ -104,7 +119,7 @@
         </div>
       </section>
 
-      <section class="panel" data-collapsible data-collapse-key="states">
+      <section class="panel states-panel" data-collapsible data-collapse-key="states" data-panel-key="states">
         <div class="panel-header">
           <h2>States</h2>
           <span id="states-caption" class="muted">Amplitudes</span>
@@ -112,14 +127,14 @@
         <div id="basis-grid"></div>
       </section>
 
-      <section class="panel" data-collapsible data-collapse-key="statevector">
+      <section class="panel statevector-panel" data-collapsible data-collapse-key="statevector" data-panel-key="statevector">
         <div class="panel-header">
           <h2>Statevector</h2>
         </div>
         <pre id="statevector">Loading...</pre>
       </section>
 
-      <section class="panel" data-collapsible data-collapse-key="circuit">
+      <section class="panel circuit-panel" data-collapsible data-collapse-key="circuit" data-panel-key="circuit">
         <div class="panel-header">
           <h2>Circuit</h2>
           <div class="header-actions">
@@ -139,7 +154,7 @@
         <div id="circuit">Loading...</div>
       </section>
 
-      <section class="panel qasm-panel" data-collapsible data-collapse-key="import-qasm">
+      <section class="panel qasm-panel" data-collapsible data-collapse-key="import-qasm" data-panel-key="qasm">
         <div class="panel-header">
           <h2>Import QASM</h2>
           <button id="import-qasm" type="button">Load</button>
@@ -153,6 +168,6 @@ cx q[0],q[1];</textarea>
     </main>
   </div>
 
-  <script type="module" src="static/main.js?v=graph-gates-1"></script>
+  <script type="module" src="static/main.js?v=layout-panels-1"></script>
 </body>
 </html>

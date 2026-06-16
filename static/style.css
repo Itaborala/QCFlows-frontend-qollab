@@ -264,6 +264,55 @@ pre {
   overflow: hidden;
 }
 
+.metric-control-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.info-link {
+  display: grid;
+  place-items: center;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--accent);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.info-link:hover,
+.info-link:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  outline: none;
+}
+
+.view-toggle-grid {
+  display: grid;
+  gap: 7px;
+}
+
+.check-option {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.check-option input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
 .segmented-control button {
   border: 0;
   border-radius: 0;
@@ -317,9 +366,23 @@ pre {
 .workspace {
   display: grid;
   grid-template-columns: minmax(420px, 1.5fr) minmax(300px, 0.9fr);
+  grid-template-areas:
+    "circuit circuit"
+    "graph metric"
+    "graph states"
+    "qasm qasm"
+    "statevector statevector";
   grid-auto-rows: min-content;
   gap: 14px;
   padding: 14px;
+}
+
+.workspace:has(.metric-panel[hidden]):has(.states-panel[hidden]) {
+  grid-template-areas:
+    "circuit circuit"
+    "graph graph"
+    "qasm qasm"
+    "statevector statevector";
 }
 
 .panel {
@@ -332,11 +395,27 @@ pre {
 }
 
 .graph-panel {
-  grid-row: span 2;
+  grid-area: graph;
+}
+
+.metric-panel {
+  grid-area: metric;
+}
+
+.states-panel {
+  grid-area: states;
+}
+
+.statevector-panel {
+  grid-area: statevector;
+}
+
+.circuit-panel {
+  grid-area: circuit;
 }
 
 .qasm-panel {
-  grid-column: 1 / -1;
+  grid-area: qasm;
 }
 
 .panel-header {
@@ -495,6 +574,7 @@ pre {
 
 #circuit {
   white-space: pre;
+  max-height: 260px;
 }
 
 .operations-list {
@@ -533,6 +613,13 @@ pre {
 
   .workspace {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "circuit"
+      "graph"
+      "metric"
+      "states"
+      "statevector"
+      "qasm";
   }
 
   .graph-panel,

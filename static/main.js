@@ -36,6 +36,7 @@ const twoGateRoutes = {
 
 initGraph(handleGraphNodeClick);
 initCollapsibleSections();
+initPanelVisibility();
 
 bindControls();
 setQubitInputs(appState.numQubits);
@@ -580,13 +581,67 @@ function setCollapsed(section, content, toggle, collapsed, label) {
 
 function refreshExpandedSection(section) {
   requestAnimationFrame(() => {
-    if (section.querySelector("#metric-matrix")) {
+    refreshVisiblePanel(section);
+  });
+}
+
+function initPanelVisibility() {
+  document.querySelectorAll("[data-panel-toggle]").forEach(toggle => {
+    const key = toggle.dataset.panelToggle;
+    const panel = document.querySelector(`[data-panel-key="${key}"]`);
+    if (!panel) return;
+
+    const visible = readPanelVisibility(key, toggle.checked);
+    toggle.checked = visible;
+    setPanelVisible(panel, visible);
+
+    toggle.addEventListener("change", () => {
+      setPanelVisible(panel, toggle.checked);
+      writePanelVisibility(key, toggle.checked);
+      if (toggle.checked) {
+        refreshVisiblePanel(panel);
+      }
+    });
+  });
+}
+
+function setPanelVisible(panel, visible) {
+  panel.hidden = !visible;
+}
+
+function refreshVisiblePanel(panel) {
+  requestAnimationFrame(() => {
+    if (panel.hidden) return;
+    if (panel.querySelector("#metric-matrix")) {
       renderMatrix(appState.graphData, appState);
     }
-    if (section.querySelector("#graph")) {
+    if (panel.querySelector("#graph")) {
       renderGraph(appState.graphData, appState);
     }
   });
+}
+
+function readPanelVisibility(key, defaultVisible) {
+  try {
+    const value = localStorage.getItem(panelStorageKey(key));
+    if (value === "true") return true;
+    if (value === "false") return false;
+  } catch {
+    return defaultVisible;
+  }
+  return defaultVisible;
+}
+
+function writePanelVisibility(key, visible) {
+  try {
+    localStorage.setItem(panelStorageKey(key), visible ? "true" : "false");
+  } catch {
+    // Ignore storage failures; panel visibility still applies for this session.
+  }
+}
+
+function panelStorageKey(key) {
+  return `qcflows:panel:${key}`;
 }
 
 function readCollapseState(key) {

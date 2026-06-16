@@ -34,7 +34,9 @@ async function request(path, options = {}) {
     }
   }
   if (!response.ok) {
-    throw new Error(body.message || body.detail || `HTTP ${response.status}`);
+    const message = body.detail || body.message;
+    const fallback = response.status === 404 ? "Backend missing" : `HTTP ${response.status}`;
+    throw new Error(typeof message === "string" && message.length <= 140 ? message : fallback);
   }
   return body;
 }
