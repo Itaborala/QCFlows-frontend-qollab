@@ -113,6 +113,14 @@ function bindControls() {
     clearPendingGate("Ready");
   });
 
+  document.addEventListener("keydown", event => {
+    if (event.defaultPrevented || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+    if (isTypingTarget(event.target)) return;
+    if (moveMarker(event.key === "ArrowRight" ? 1 : -1)) {
+      event.preventDefault();
+    }
+  });
+
   syncGateButtonState();
 
   document.getElementById("set-qubits").addEventListener("click", () => {
