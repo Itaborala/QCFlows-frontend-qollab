@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <link rel="stylesheet" href="static/style.css?v=markers-1">
+  <link rel="stylesheet" href="static/style.css?v=demo-experiments-1">
 </head>
 <body>
   <div class="app-shell">
@@ -48,6 +48,14 @@
           <label class="check-option"><input type="checkbox" data-panel-toggle="metric-matrix"> <span>K-matrix</span></label>
           <label class="check-option"><input type="checkbox" data-panel-toggle="states"> <span>States</span></label>
           <label class="check-option"><input type="checkbox" data-panel-toggle="statevector"> <span>Statevector</span></label>
+        </div>
+      </section>
+
+      <section class="tool-section" data-collapsible data-collapse-key="examples">
+        <h2>Examples</h2>
+        <div class="demo-loader">
+          <select id="demo-experiment-select" aria-label="Demo experiment"></select>
+          <button id="load-demo-experiment" type="button">Load</button>
         </div>
       </section>
 
@@ -169,6 +177,6 @@ cx q[0],q[1];</textarea>
     </main>
   </div>
 
-  <script type="module" src="static/main.js?v=markers-1"></script>
+  <script type="module" src="static/main.js?v=demo-experiments-1"></script>
 </body>
 </html>

@@ -27,6 +27,7 @@ body {
 
 button,
 input,
+select,
 textarea {
   font: inherit;
 }
@@ -58,6 +59,7 @@ button.active-tool:hover {
 }
 
 input,
+select,
 textarea {
   width: 100%;
   border: 1px solid var(--line);
@@ -65,6 +67,10 @@ textarea {
   background: #fff;
   color: var(--text);
   padding: 7px 8px;
+}
+
+select {
+  min-height: 34px;
 }
 
 textarea,
@@ -233,12 +239,14 @@ pre {
 }
 
 .inline-fields,
+.demo-loader,
 .button-row,
 .button-grid {
   display: grid;
   gap: 8px;
 }
 
+.demo-loader,
 .inline-fields {
   grid-template-columns: 1fr 72px;
 }

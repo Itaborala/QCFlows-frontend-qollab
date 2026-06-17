@@ -24,11 +24,33 @@ export function appendOp(op) {
 export function removeLastOp() {
   appState.operations.pop();
   markStale();
-} 
+}
 
 export function resetOps() {
   appState.operations = [];
   markStale();
+}
+
+
+export function replaceCircuit(numQubits, operations, options = {}) {
+  const next = Number.parseInt(numQubits, 10);
+  if (Number.isInteger(next) && next > 0) {
+    appState.numQubits = next;
+  }
+  appState.operations = Array.isArray(operations) ? operations : [];
+  appState.resultsBy = options.resultsBy && typeof options.resultsBy === "object"
+    ? options.resultsBy
+    : {};
+  appState.results = (appState.resultsBy[appState.metric] || {})[appState.basis] || [];
+  appState.marker = null;
+  appState.markerSelections = {};
+  setMarker(options.marker);
+  if (options.stale === false) {
+    appState.stale = false;
+    persist();
+  } else {
+    markStale();
+  }
 }
 
 

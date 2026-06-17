@@ -9,6 +9,7 @@ import {
   appendOp,
   removeLastOp,
   resetOps,
+  replaceCircuit,
   loadPersisted,
   clearStale,
   markerStatus,
@@ -76,6 +77,7 @@ function bindControls() {
   });
 
   document.getElementById("run-circuit").addEventListener("click", runSimulation);
+  document.getElementById("load-demo-experiment").addEventListener("click", loadSelectedDemoExperiment);
 
 
   document.getElementById("history-marker").addEventListener("input", event => {
@@ -141,8 +143,7 @@ function bindControls() {
     try {
       setStatus("Importing QASM");
       const result = await apiPost("/import_qasm", {qasm});
-      setNumQubits(result.num_qubits);
-      appState.operations = result.operations;
+      replaceCircuit(result.num_qubits, result.operations);
       setQubitInputs(appState.numQubits);
       afterEdit();
       setStatus("Ready", "ok");
@@ -194,6 +195,103 @@ function initialize() {
   renderMarkerStrip();
   renderStale();
   checkConnection();
+  loadDemoExperiments();
+}
+
+async function loadDemoExperiments() {
+  const select = document.getElementById("demo-experiment-select");
+  const loadButton = document.getElementById("load-demo-experiment");
+  if (!select || !loadButton) return;
+
+  setDemoSelectMessage(select, "Loading");
+  select.disabled = true;
+  loadButton.disabled = true;
+
+  try {
+    const data = await apiGet("/experiments");
+    const experiments = Array.isArray(data.experiments) ? data.experiments : [];
+    select.replaceChildren();
+    for (const experiment of experiments) {
+      const option = document.createElement("option");
+      option.value = experiment.id;
+      option.textContent = experiment.title || experiment.id;
+      option.title = experiment.description || "";
+      select.appendChild(option);
+    }
+    const hasExperiments = experiments.length > 0;
+    if (!hasExperiments) setDemoSelectMessage(select, "No examples");
+    select.disabled = !hasExperiments;
+    loadButton.disabled = !hasExperiments;
+  } catch {
+    setDemoSelectMessage(select, "Unavailable");
+    select.disabled = true;
+    loadButton.disabled = true;
+  }
+}
+
+async function loadSelectedDemoExperiment() {
+  const select = document.getElementById("demo-experiment-select");
+  const experimentId = select?.value;
+  if (!experimentId) return;
+
+  try {
+    setStatus("Loading example");
+    const data = await apiGet(`/experiments/${encodeURIComponent(experimentId)}`);
+    applyExperimentDefaults(data.default_view);
+    replaceCircuit(data.num_qubits, normalizeDemoOperations(data.operations), {
+      marker: data.default_view?.marker,
+      resultsBy: data.results_by_metric_basis,
+      stale: !hasPrecomputedResults(data.results_by_metric_basis),
+    });
+    setPendingGate(null);
+    syncGateButtonState();
+    setQubitInputs(appState.numQubits);
+    afterEdit();
+    setStatus(`Loaded ${data.title || "example"}`, "ok");
+  } catch (error) {
+    setStatus(error.message, "error");
+  }
+}
+
+function setDemoSelectMessage(select, message) {
+  const option = document.createElement("option");
+  option.value = "";
+  option.textContent = message;
+  select.replaceChildren(option);
+}
+
+function applyExperimentDefaults(defaultView = {}) {
+  if (defaultView.basis) {
+    setBasis(defaultView.basis);
+    syncBasisControl();
+  }
+  if (defaultView.metric) {
+    setMetric(defaultView.metric);
+    syncMetricControl();
+  }
+}
+
+function hasPrecomputedResults(resultsBy) {
+  if (!resultsBy || typeof resultsBy !== "object") return false;
+  return Object.values(resultsBy).some(byBasis =>
+    byBasis && typeof byBasis === "object" &&
+      Object.values(byBasis).some(results => Array.isArray(results) && results.length)
+  );
+}
+
+function normalizeDemoOperations(operations) {
+  if (!Array.isArray(operations)) return [];
+  return operations.map(operation => ({
+    gate: String(operation.gate || "").toLowerCase(),
+    qubits: Array.isArray(operation.qubits)
+      ? operation.qubits
+          .map(qubit => Number.parseInt(qubit, 10))
+          .filter(Number.isInteger)
+      : [],
+    params: operation.params && typeof operation.params === "object"
+      ? {...operation.params}
+      : {},
+  }));
 }
 
 //async function initialize() {
