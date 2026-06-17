@@ -59,17 +59,13 @@
         </div>
       </section>
 
-      <section class="tool-section" data-collapsible data-collapse-key="qubits">
-        <h2>Qubits</h2>
-        <label class="field-label" for="qubit-count">Count</label>
-        <div class="inline-fields">
+      <section class="tool-section build-section" data-collapsible data-collapse-key="build">
+        <h2>Build</h2>
+        <div class="field-row qubit-count-row">
+          <label class="field-label" for="qubit-count">Count</label>
           <input id="qubit-count" type="number" min="1" max="12" value="5">
           <button id="set-qubits" type="button">Set</button>
         </div>
-      </section>
-
-      <section class="tool-section" data-collapsible data-collapse-key="single-qubit">
-        <h2>Single Qubit</h2>
         <div class="button-grid gate-grid">
           <button type="button" data-single-gate="H">H</button>
           <button type="button" data-single-gate="X">X</button>
@@ -78,25 +74,19 @@
           <button type="button" data-single-gate="Z">Z</button>
           <button type="button" data-single-gate="Y">Y</button>
         </div>
-        <label class="field-label" for="rotation-angle">Angle</label>
-        <input id="rotation-angle" type="number" step="any" value="1.5708">
+        <div class="field-row angle-row">
+          <label class="field-label" for="rotation-angle">Angle</label>
+          <input id="rotation-angle" type="number" step="any" value="1.5708">
+        </div>
         <div class="button-grid">
           <button type="button" data-rotation-gate="RX">RX</button>
           <button type="button" data-rotation-gate="RY">RY</button>
           <button type="button" data-rotation-gate="RZ">RZ</button>
         </div>
-      </section>
-
-      <section class="tool-section" data-collapsible data-collapse-key="two-qubit">
-        <h2>Two Qubit</h2>
-        <div class="button-grid">
+        <div class="button-grid two-gate-grid">
           <button type="button" data-two-gate="CX">CX</button>
           <button type="button" data-two-gate="CZ">CZ</button>
         </div>
-      </section>
-
-      <section class="tool-section" data-collapsible data-collapse-key="circuit-actions">
-        <h2>Circuit</h2>
         <div class="button-row">
           <button id="undo-gate" type="button">Undo</button>
           <button id="reset-circuit" type="button">Reset</button>
