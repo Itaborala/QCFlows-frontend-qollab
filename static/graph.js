@@ -82,13 +82,15 @@ export function renderGraph(data, state) {
     .attr("class", "link")
     .attr("fill", "none")
     .attr("stroke", "#64748b")
-    .attr("marker-end", d => d.directed ? "url(#arrowhead)" : null)
-    .append("title");
+    .attr("marker-end", d => d.directed ? "url(#arrowhead)" : null);
 
-  linkEnter.merge(link)
+  linkEnter.append("title");
+
+  const allLinks = linkEnter.merge(link);
+  allLinks
     .attr("stroke-width", d => 1 + 5 * Math.sqrt(Math.min(1, edgeValue(d) / scaleMax)))
-    .attr("marker-end", d => d.directed ? "url(#arrowhead)" : null)
-    .select("title")
+    .attr("marker-end", d => d.directed ? "url(#arrowhead)" : null);
+  allLinks.select("title")
     .text(d => {
       const source = nodeId(d.source);
       const target = nodeId(d.target);
