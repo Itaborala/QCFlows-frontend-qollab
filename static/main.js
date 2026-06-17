@@ -81,7 +81,9 @@ function bindControls() {
 
 
   document.getElementById("history-marker").addEventListener("input", event => {
-    setMarker(event.target.value);
+    const marker = sliderMarker(Number.parseInt(event.target.value, 10));
+    if (marker === null) return;
+    setMarker(marker);
     //renderTimeline(appState.timelineData, appState);
     //refreshAll();
     renderActiveMarker();
@@ -621,7 +623,7 @@ function syncSlider() {
   const label = document.getElementById("history-label");
   const count = document.getElementById("history-count");
 
-  const markers = appState.results.map(result => result.marker);
+  const markers = navigableMarkers();
   if (!markers.length) {
     input.disabled = true;
     input.min = 0;
@@ -632,15 +634,62 @@ function syncSlider() {
     return;
   }
 
-  const max = Math.max(...markers);
-  const current = appState.marker ?? max;
+  const index = closestMarkerIndex(markers, appState.marker ?? markers[markers.length - 1]);
+  const current = markers[index];
+  if (appState.marker !== current) setMarker(current);
   input.disabled = false;
-  input.min = Math.min(...markers);
-  input.max = max;
+  input.min = 0;
+  input.max = markers.length - 1;
   input.step = 1;
-  input.value = current;
+  input.value = index;
   label.textContent = `Marker ${current}`;
-  count.textContent = `${current} / ${max}`;
+  count.textContent = `${index + 1} / ${markers.length}`;
+}
+
+function navigableMarkers() {
+  const selected = selectedMarkerIds();
+  if (selected.length) return selected;
+  return Array.from(new Set(appState.results.map(result => Number(result.marker))))
+    .filter(Number.isInteger)
+    .sort((a, b) => a - b);
+}
+
+function sliderMarker(index) {
+  const markers = navigableMarkers();
+  if (!markers.length || !Number.isInteger(index)) return null;
+  return markers[Math.max(0, Math.min(markers.length - 1, index))];
+}
+
+function closestMarkerIndex(markers, marker) {
+  const exact = markers.indexOf(Number(marker));
+  if (exact !== -1) return exact;
+  return markers.reduce((closest, candidate, index) => (
+    Math.abs(candidate - marker) < Math.abs(markers[closest] - marker) ? index : closest
+  ), 0);
+}
+
+function moveMarker(delta) {
+  const markers = navigableMarkers();
+  if (markers.length < 2) return false;
+  const current = appState.marker ?? markers[markers.length - 1];
+  const index = closestMarkerIndex(markers, current);
+  const nextIndex = Math.max(0, Math.min(markers.length - 1, index + delta));
+  const nextMarker = markers[nextIndex];
+  if (nextMarker === appState.marker) return true;
+  setMarker(nextMarker);
+  syncSlider();
+  renderActiveMarker();
+  renderMarkerStrip();
+  renderCircuitView();
+  return true;
+}
+
+function isTypingTarget(target) {
+  if (!target) return false;
+  if (target.isContentEditable) return true;
+  const tag = target.tagName;
+  if (tag === "TEXTAREA" || tag === "SELECT") return true;
+  return tag === "INPUT" && target.type !== "range";
 }
 
 function renderMarkerStrip() {
