@@ -61,13 +61,15 @@ export function renderGraph(data, state) {
   if (!data || !Array.isArray(data.nodes)) {
     d3.select("#graph")
       .classed("is-empty", true)
-      .classed("placement-active", false);
+      .classed("placement-active", false)
+      .attr("data-placement-label", null);
     return;
   }
 
   d3.select("#graph")
     .classed("is-empty", false)
-    .classed("placement-active", Boolean(state?.pendingGate));
+    .classed("placement-active", Boolean(state?.pendingGate))
+    .attr("data-placement-label", placementLabel(state));
   const nodes = mergeNodes(simulation.nodes(), data.nodes.map(node => ({...node})));
   const edges = (data.edges || []).map(edge => ({...edge}));
   const scaleMax = metricMax(data);
@@ -211,6 +213,16 @@ function nodeAriaLabel(node, state) {
 
 function sameId(first, second) {
   return String(first) === String(second);
+}
+
+function placementLabel(state) {
+  const pending = state?.pendingGate;
+  if (!pending) return null;
+  if (pending.kind === "two" && pending.control !== null && pending.control !== undefined) {
+    return `${pending.gate} q${pending.control} -> ?`;
+  }
+  if (pending.kind === "two") return `${pending.gate}: choose control`;
+  return `${pending.gate}: choose qubit`;
 }
 
 function placementActive() {
