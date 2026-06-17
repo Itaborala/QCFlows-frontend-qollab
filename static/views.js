@@ -1,7 +1,7 @@
 const GATE_SYMBOL = {h: "H", x: "X", y: "Y", z: "Z", s: "S", t: "T", sx: "SX", rx: "RX", ry: "RY", rz: "RZ", sdg: "SDG", tdg: "TDG", cx: "CX", cy: "CY", cz: "CZ", crx: "CRX", cry: "CRY", crz: "CRZ", swap: "SWAP"};
 const CONTROLLED_TARGET = {cx: "X", cy: "Y", cz: "Z", crx: "RX", cry: "RY", crz: "RZ"};
 const SVG_NS = "http://www.w3.org/2000/svg";
-const CIRCUIT = {left: 56, right: 36, top: 34, row: 54, col: 74};
+const CIRCUIT = {left: 66, right: 48, top: 40, row: 62, col: 84};
 
 export function setStatus(message, tone = "neutral") {
   const status = document.getElementById("status");
@@ -88,6 +88,7 @@ function drawMarker(svg, marker, maxMarker, height, options) {
   const g = svgElement("g", {
     class: `circuit-marker${active ? " is-active" : ""}`,
     "data-status": status,
+    "data-marker": marker,
     role: "button",
     tabindex: 0,
     "aria-pressed": status !== "unmarked" ? "true" : "false",
@@ -106,8 +107,8 @@ function drawMarker(svg, marker, maxMarker, height, options) {
 }
 
 function drawGateBox(svg, x, y, label) {
-  const width = Math.max(36, label.length * 9 + 16);
-  svg.appendChild(svgElement("rect", {class: "circuit-gate", x: x - width / 2, y: y - 18, width, height: 36, rx: 6}));
+  const width = Math.max(40, label.length * 9 + 18);
+  svg.appendChild(svgElement("rect", {class: "circuit-gate", x: x - width / 2, y: y - 19, width, height: 38, rx: 6}));
   svg.appendChild(svgElement("text", {class: "circuit-gate-label", x, y: y + 4}, label));
 }
 

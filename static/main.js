@@ -707,10 +707,16 @@ function renderMarkerStrip() {
     button.type = "button";
     button.className = "marker-button";
     button.dataset.status = status;
+    button.dataset.marker = marker;
     button.classList.toggle("is-active", activeMarker === marker);
     button.textContent = String(marker);
     button.title = markerTitle(marker, status);
+    button.setAttribute("aria-label", markerTitle(marker, status));
     button.setAttribute("aria-pressed", status !== "unmarked" ? "true" : "false");
+    button.addEventListener("mouseenter", () => highlightCircuitMarker(marker, true));
+    button.addEventListener("mouseleave", () => highlightCircuitMarker(marker, false));
+    button.addEventListener("focus", () => highlightCircuitMarker(marker, true));
+    button.addEventListener("blur", () => highlightCircuitMarker(marker, false));
     button.addEventListener("click", () => handleMarkerClick(marker));
     strip.appendChild(button);
   }
@@ -756,9 +762,34 @@ function nextMarkerAfterRemoval(removedMarker) {
 }
 
 function markerTitle(marker, status) {
-  if (status === "cached") return `Marker ${marker}: cached`;
-  if (status === "dirty") return `Marker ${marker}: needs run`;
-  return `Marker ${marker}: not selected`;
+  const statusLabel = status === "cached"
+    ? "cached"
+    : status === "dirty"
+      ? "needs run"
+      : "not selected";
+  return `${markerOperationLabel(marker)}\nMarker ${marker}: ${statusLabel}`;
+}
+
+function markerOperationLabel(marker) {
+  if (marker <= 0) return "Input state";
+  const operation = appState.operations[marker - 1];
+  if (!operation) return `After operation ${marker}`;
+  return `After ${formatMarkerOperation(operation, marker)}`;
+}
+
+function formatMarkerOperation(operation, index) {
+  const gate = String(operation.gate || "?").toUpperCase();
+  const qubits = Array.isArray(operation.qubits) ? operation.qubits.join(",") : "";
+  const angle = operation.params?.angle;
+  return angle != null
+    ? `${index}. ${gate}(${Number(angle).toFixed(3)})[${qubits}]`
+    : `${index}. ${gate}[${qubits}]`;
+}
+
+function highlightCircuitMarker(marker, highlighted) {
+  document
+    .querySelectorAll(`.circuit-marker[data-marker="${marker}"]`)
+    .forEach(node => node.classList.toggle("is-hovered", highlighted));
 }
 
 function hasCachedResult(marker) {
@@ -826,6 +857,9 @@ function initCollapsibleSections() {
     while (next) {
       const current = next;
       next = next.nextSibling;
+      if (current.nodeType === Node.ELEMENT_NODE && current.matches("[data-collapse-persistent]")) {
+        continue;
+      }
       content.appendChild(current);
     }
     section.appendChild(content);

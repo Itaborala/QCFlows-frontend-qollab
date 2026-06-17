@@ -363,16 +363,24 @@ pre {
   margin-bottom: 10px;
 }
 
+.circuit-panel[data-collapsed="true"] .circuit-history {
+  margin: 10px 0 0;
+}
+
 .marker-strip {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
   align-items: center;
   min-height: 30px;
   margin-bottom: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
 }
 
 .marker-button {
+  flex: 0 0 30px;
   display: grid;
   place-items: center;
   width: 30px;
@@ -640,14 +648,14 @@ pre {
   background: var(--panel-soft);
   border: 1px solid var(--line);
   border-radius: 6px;
-  padding: 10px;
+  padding: 16px;
   font-size: 13px;
   line-height: 1.45;
 }
 
 
 #circuit {
-  max-height: 260px;
+  max-height: 380px;
 }
 
 #circuit svg {
@@ -724,10 +732,19 @@ pre {
 
 .circuit-marker:hover .circuit-marker-line,
 .circuit-marker:focus-visible .circuit-marker-line,
+.circuit-marker.is-hovered .circuit-marker-line,
 .circuit-marker.is-active .circuit-marker-line,
 .circuit-marker[data-status="dirty"] .circuit-marker-line,
 .circuit-marker[data-status="cached"] .circuit-marker-line {
   opacity: 0.7;
+}
+
+.circuit-marker.is-hovered .circuit-marker-line {
+  stroke-width: 2.25;
+}
+
+.circuit-marker.is-hovered .circuit-marker-dot {
+  opacity: 1;
 }
 
 .circuit-marker.is-active .circuit-marker-dot {
@@ -743,16 +760,20 @@ pre {
 }
 
 .operations-list {
-  display: flex;
-  flex-wrap: wrap;
+  display: none;
+  flex-wrap: nowrap;
   gap: 6px;
   min-height: 28px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
   color: var(--muted);
   font-size: 12px;
 }
 
 .operation-chip {
+  flex: 0 0 auto;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: #fff;
