@@ -1,5 +1,7 @@
-const GATE_SYMBOL = {h: "H", x: "X", y: "Y", z: "Z", cx: "CX", cy: "CY", cz: "CZ", swap: "SWAP"};
-const CONTROLLED_TARGET = {cx: "X", cz: "Z", crx: "RX", cry: "RY", crz: "RZ"};
+const GATE_SYMBOL = {h: "H", x: "X", y: "Y", z: "Z", s: "S", t: "T", sx: "SX", rx: "RX", ry: "RY", rz: "RZ", sdg: "SDG", tdg: "TDG", cx: "CX", cy: "CY", cz: "CZ", crx: "CRX", cry: "CRY", crz: "CRZ", swap: "SWAP"};
+const CONTROLLED_TARGET = {cx: "X", cy: "Y", cz: "Z", crx: "RX", cry: "RY", crz: "RZ"};
+const SVG_NS = "http://www.w3.org/2000/svg";
+const CIRCUIT = {left: 56, right: 36, top: 34, row: 54, col: 74};
 
 export function setStatus(message, tone = "neutral") {
   const status = document.getElementById("status");
@@ -19,76 +21,127 @@ export function renderGraphCaption(state, data) {
   //container.innerHTML = data?.circuit_diagram || "No circuit.";
 //}
 
-export function renderCircuit(operations, numQubits) {
+export function renderCircuit(operations, numQubits, options = {}) {
   const container = document.getElementById("circuit");
   if (!container) return;
 
-  const n = Math.max(numQubits, 1);
-  const rowCount = 2 * n - 1;
-  const labelWidth = `q${n - 1}: `.length;
+  const ops = Array.isArray(operations) ? operations : [];
+  const n = Math.max(Number.parseInt(numQubits, 10) || 1, 1);
+  const laneEnd = CIRCUIT.left + Math.max(ops.length, 1) * CIRCUIT.col;
+  const height = CIRCUIT.top * 2 + (n - 1) * CIRCUIT.row;
+  const width = laneEnd + CIRCUIT.right;
 
-
-  const lines = Array.from({length: rowCount}, (_, r) => 
-    r % 2 === 0 ? `q${r / 2}: `.padEnd(labelWidth, " ") : " ".repeat(labelWidth)
-  );
-
-  const columns = operations.map(op => buildColumn(op, n));
-  if (!columns.length) {
-    for (let r = 0; r < rowCount; r++) {
-      if (r % 2 === 0) lines[r] += "─".repeat(3);
-    }
-  }
-  for (const col of columns) {
-    for (let r = 0; r < rowCount; r++) {
-      lines[r] += r % 2 === 0 ? col.wire[r / 2] : col.gap[(r - 1) / 2];
-    }
+  container.innerHTML = "";
+  const svg = svgElement("svg", {viewBox: `0 0 ${width} ${height}`, width, height, role: "group", "aria-label": "Quantum circuit"});
+  for (let qubit = 0; qubit < n; qubit += 1) {
+    const y = qubitY(qubit);
+    svg.appendChild(svgElement("text", {class: "circuit-label", x: 12, y: y + 4}, `q${qubit}`));
+    svg.appendChild(svgElement("line", {class: "circuit-wire", x1: CIRCUIT.left, y1: y, x2: laneEnd, y2: y}));
   }
 
-  container.textContent = lines.join("\n");
+  ops.forEach((op, index) => drawOperation(svg, op, index));
+  for (let marker = 0; marker <= ops.length; marker += 1) {
+    drawMarker(svg, marker, ops.length, height, options);
+  }
+  container.appendChild(svg);
 }
 
-function buildColumn(op, n) {
-  const labels = Array.from({length: n}, () => "");
-  const connect = Array.from({length: Math.max(0, n - 1)}, () => false);
-  let controlQubit = null;
+function drawOperation(svg, op, index) {
+  const qubits = normalizeQubits(op?.qubits);
+  if (!qubits.length) return;
 
-    if (op.qubits.length === 1) {
-      const sym = GATE_SYMBOL[op.gate] || op.gate.toUpperCase();
-      labels[op.qubits[0]] = ` ${sym} `;
-  } else {
-    const [control, target] = op.qubits;
-    controlQubit = control;
-    labels[control] = "\u25CF";                                  // ● control
-    labels[target] = ` ${CONTROLLED_TARGET[op.gate] || "X"} `;  // target
-    const lo = Math.min(control, target);
-    const hi = Math.max(control, target);
-    for (let g = lo; g < hi; g++) connect[g] = true;
+  const x = markerX(index) + CIRCUIT.col / 2;
+  if (qubits.length === 1) {
+    drawGateBox(svg, x, qubitY(qubits[0]), gateLabel(op));
+    return;
   }
 
-  const width = Math.max(1, ...labels.map(s => s.length)) + 2;
-  //const center = Math.floor(width / 2);
+  const gate = String(op?.gate || "").toLowerCase();
+  const ys = qubits.map(qubitY);
+  svg.appendChild(svgElement("line", {
+    class: "circuit-connector",
+    x1: x,
+    y1: Math.min(...ys),
+    x2: x,
+    y2: Math.max(...ys),
+  }));
 
-  const connectorCol = controlQubit === null
-    ? Math.floor(width / 2)
-    : Math.floor((width - labels[controlQubit].length) / 2);
+  if (gate === "swap") {
+    for (const qubit of qubits.slice(0, 2)) {
+      svg.appendChild(svgElement("text", {class: "circuit-swap", x, y: qubitY(qubit) + 6}, "x"));
+    }
+    return;
+  }
 
-  const wire = labels.map(s => {
-    if (!s) return "\u2500".repeat(width);                       // ─ fill
-    const pad = width - s.length;
-    const left = Math.floor(pad / 2);
-    return "\u2500".repeat(left) + s + "\u2500".repeat(pad - left);
-  });
-
-  const gap = connect.map(on => {
-    if (!on) return " ".repeat(width);
-    const cells = Array.from({length: width}, () => " ");
-    cells[connectorCol] = "\u2502";                                    // │ connector
-    return cells.join("");
-  });
-
-  return {wire, gap};
+  const [control, target, ...rest] = qubits;
+  drawControl(svg, x, qubitY(control));
+  drawGateBox(svg, x, qubitY(target), CONTROLLED_TARGET[gate] || gateLabel(op));
+  for (const qubit of rest) {
+    drawGateBox(svg, x, qubitY(qubit), gateLabel(op));
+  }
 }
 
+function drawMarker(svg, marker, maxMarker, height, options) {
+  const status = options.markerStatus?.(marker) || "unmarked";
+  const active = marker === (options.activeMarker ?? maxMarker);
+  const x = markerX(marker);
+  const g = svgElement("g", {
+    class: `circuit-marker${active ? " is-active" : ""}`,
+    "data-status": status,
+    role: "button",
+    tabindex: 0,
+    "aria-pressed": status !== "unmarked" ? "true" : "false",
+  });
+  g.appendChild(svgElement("title", {}, options.markerTitle?.(marker, status) || `Marker ${marker}`));
+  g.appendChild(svgElement("line", {class: "circuit-marker-hit", x1: x, y1: 12, x2: x, y2: height - 12}));
+  g.appendChild(svgElement("line", {class: "circuit-marker-line", x1: x, y1: 16, x2: x, y2: height - 16}));
+  g.appendChild(svgElement("circle", {class: "circuit-marker-dot", cx: x, cy: 15, r: 4}));
+  g.addEventListener("click", () => options.onMarkerClick?.(marker));
+  g.addEventListener("keydown", event => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    options.onMarkerClick?.(marker);
+  });
+  svg.appendChild(g);
+}
+
+function drawGateBox(svg, x, y, label) {
+  const width = Math.max(36, label.length * 9 + 16);
+  svg.appendChild(svgElement("rect", {class: "circuit-gate", x: x - width / 2, y: y - 18, width, height: 36, rx: 6}));
+  svg.appendChild(svgElement("text", {class: "circuit-gate-label", x, y: y + 4}, label));
+}
+
+function drawControl(svg, x, y) {
+  svg.appendChild(svgElement("circle", {class: "circuit-control", cx: x, cy: y, r: 5}));
+}
+
+function gateLabel(op) {
+  const gate = String(op?.gate || "?").toLowerCase();
+  return GATE_SYMBOL[gate] || gate.toUpperCase();
+}
+
+function normalizeQubits(qubits) {
+  return (Array.isArray(qubits) ? qubits : [])
+    .map(qubit => Number.parseInt(qubit, 10))
+    .filter(Number.isInteger);
+}
+
+function markerX(marker) {
+  return CIRCUIT.left + marker * CIRCUIT.col;
+}
+
+function qubitY(qubit) {
+  return CIRCUIT.top + qubit * CIRCUIT.row;
+}
+
+function svgElement(name, attrs = {}, text) {
+  const element = document.createElementNS(SVG_NS, name);
+  for (const [key, value] of Object.entries(attrs)) {
+    element.setAttribute(key, String(value));
+  }
+  if (text !== undefined) element.textContent = text;
+  return element;
+}
 
 export function renderOperations(operations) {
   const container = document.getElementById("operations-list");

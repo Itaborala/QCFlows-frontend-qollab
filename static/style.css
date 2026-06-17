@@ -623,8 +623,99 @@ pre {
 
 
 #circuit {
-  white-space: pre;
   max-height: 260px;
+}
+
+#circuit svg {
+  display: block;
+  min-width: 100%;
+}
+
+.circuit-label,
+.circuit-gate-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  fill: var(--muted);
+}
+
+.circuit-wire {
+  stroke: #94a3b8;
+  stroke-width: 1.5;
+}
+
+.circuit-connector {
+  stroke: #334155;
+  stroke-width: 2;
+}
+
+.circuit-gate {
+  fill: #ffffff;
+  stroke: #334155;
+  stroke-width: 1.5;
+}
+
+.circuit-gate-label {
+  fill: #0f172a;
+  text-anchor: middle;
+}
+
+.circuit-control {
+  fill: #334155;
+}
+
+.circuit-swap {
+  fill: #334155;
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.circuit-marker {
+  color: #94a3b8;
+  cursor: pointer;
+  outline: none;
+}
+
+.circuit-marker-hit {
+  stroke: transparent;
+  stroke-width: 18;
+  pointer-events: stroke;
+}
+
+.circuit-marker-line {
+  stroke: currentColor;
+  stroke-dasharray: 4 5;
+  stroke-width: 1.5;
+  opacity: 0.18;
+}
+
+.circuit-marker-dot {
+  fill: var(--panel-soft);
+  stroke: currentColor;
+  stroke-width: 1.5;
+  opacity: 0.42;
+}
+
+.circuit-marker:hover .circuit-marker-line,
+.circuit-marker:focus-visible .circuit-marker-line,
+.circuit-marker.is-active .circuit-marker-line,
+.circuit-marker[data-status="dirty"] .circuit-marker-line,
+.circuit-marker[data-status="cached"] .circuit-marker-line {
+  opacity: 0.7;
+}
+
+.circuit-marker.is-active .circuit-marker-dot {
+  opacity: 1;
+}
+
+.circuit-marker[data-status="dirty"] {
+  color: #d97706;
+}
+
+.circuit-marker[data-status="cached"] {
+  color: var(--accent);
 }
 
 .operations-list {

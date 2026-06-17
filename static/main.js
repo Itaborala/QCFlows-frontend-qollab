@@ -86,6 +86,7 @@ function bindControls() {
     //refreshAll();
     renderActiveMarker();
     renderMarkerStrip();
+    renderCircuitView();
   });
 
   document.querySelectorAll("[data-single-gate]").forEach(button => {
@@ -189,7 +190,7 @@ function initialize() {
   syncBasisControl();
   syncMetricControl();
   renderOperations(appState.operations);
-  renderCircuit(appState.operations, appState.numQubits);
+  renderCircuitView();
   syncSlider();
   renderActiveMarker();
   renderMarkerStrip();
@@ -364,8 +365,8 @@ async function refreshCircuit() {
   const suffix = params.toString() ? `?${params.toString()}` : "";
   try {
     const data = await apiGet(`/get_circuit${suffix}`);
-    renderOperations(data);
-    renderCircuit(data);
+    renderOperations(data.operations || appState.operations);
+    renderCircuitView(data.operations || appState.operations, data.num_qubits || appState.numQubits);
   } catch (error) {
     renderPanelError("operations-list", "Operations unavailable.");
     renderPanelError("circuit", "Circuit unavailable.");
@@ -497,10 +498,20 @@ function appendMarker(params) {
   }
 }
 
+function renderCircuitView(operations = appState.operations, numQubits = appState.numQubits) {
+  const ops = Array.isArray(operations) ? operations : appState.operations;
+  renderCircuit(ops, numQubits, {
+    activeMarker: appState.marker ?? ops.length,
+    markerStatus,
+    markerTitle,
+    onMarkerClick: handleMarkerClick,
+  });
+}
+
 
 function afterEdit() {
   renderOperations(appState.operations);
-  renderCircuit(appState.operations, appState.numQubits);
+  renderCircuitView();
   syncSlider();
   renderActiveMarker();
   renderMarkerStrip();
@@ -561,6 +572,7 @@ async function runSimulation() {
     syncSlider();
     renderActiveMarker();
     renderMarkerStrip();
+    renderCircuitView();
     renderStale();
     setStatus("Ready", "ok");
   } catch (error) {
@@ -640,24 +652,27 @@ function renderMarkerStrip() {
     button.textContent = String(marker);
     button.title = markerTitle(marker, status);
     button.setAttribute("aria-pressed", status !== "unmarked" ? "true" : "false");
-    button.addEventListener("click", () => {
-      const wasSelected = markerStatus(marker) !== "unmarked";
-      toggleMarkerSelection(marker, hasCachedResult(marker) ? "cached" : "dirty");
-      if (wasSelected) {
-        removeMarkerResults(marker);
-        if (appState.marker === marker) {
-          setMarker(nextMarkerAfterRemoval(marker));
-        }
-      } else {
-        setMarker(marker);
-      }
-      syncSlider();
-      renderActiveMarker();
-      renderMarkerStrip();
-      renderStale();
-    });
+    button.addEventListener("click", () => handleMarkerClick(marker));
     strip.appendChild(button);
   }
+}
+
+function handleMarkerClick(marker) {
+  const wasSelected = markerStatus(marker) !== "unmarked";
+  toggleMarkerSelection(marker, hasCachedResult(marker) ? "cached" : "dirty");
+  if (wasSelected) {
+    removeMarkerResults(marker);
+    if (appState.marker === marker) {
+      setMarker(nextMarkerAfterRemoval(marker));
+    }
+  } else {
+    setMarker(marker);
+  }
+  syncSlider();
+  renderActiveMarker();
+  renderMarkerStrip();
+  renderCircuitView();
+  renderStale();
 }
 
 function removeMarkerResults(marker) {
