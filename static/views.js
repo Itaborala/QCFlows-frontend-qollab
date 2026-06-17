@@ -1,4 +1,4 @@
-const GATE_SYMBOL = {h: "H", x: "X", y: "Y", z: "Z", s: "S", t: "T", sx: "SX", rx: "RX", ry: "RY", rz: "RZ", sdg: "SDG", tdg: "TDG", cx: "CX", cy: "CY", cz: "CZ", crx: "CRX", cry: "CRY", crz: "CRZ", swap: "SWAP"};
+const GATE_SYMBOL = {h: "H", x: "X", y: "Y", z: "Z", s: "S", t: "T", sx: "SX", rx: "RX", ry: "RY", rz: "RZ", sdg: "SDG", tdg: "TDG", cx: "CX", cy: "CY", cz: "CZ", crx: "CRX", cry: "CRY", crz: "CRZ", swap: "SWAP", mcx: "MCX"};
 const CONTROLLED_TARGET = {cx: "X", cy: "Y", cz: "Z", crx: "RX", cry: "RY", crz: "RZ"};
 const SVG_NS = "http://www.w3.org/2000/svg";
 const CIRCUIT = {left: 66, right: 48, top: 40, row: 62, col: 84};
@@ -70,6 +70,16 @@ function drawOperation(svg, op, index) {
     for (const qubit of qubits.slice(0, 2)) {
       svg.appendChild(svgElement("text", {class: "circuit-swap", x, y: qubitY(qubit) + 6}, "x"));
     }
+    return;
+  }
+
+  if (gate === "mcx") {
+    const controls = qubits.slice(0, -1);
+    const target = qubits[qubits.length - 1];
+    for (const qubit of controls) {
+      drawControl(svg, x, qubitY(qubit));
+    }
+    drawGateBox(svg, x, qubitY(target), "X");
     return;
   }
 
