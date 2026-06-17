@@ -66,6 +66,7 @@ function bindControls() {
     appState.results = (appState.resultsBy[appState.metric] || {})[value] || [];
     syncSlider();
     renderActiveMarker();
+    renderCircuitView();
     //refreshAll();
   });
   bindSegmented("metric-control", "metric", value => {
@@ -73,6 +74,7 @@ function bindControls() {
     appState.results = (appState.resultsBy[value] || {})[appState.basis] || [];
     syncSlider();
     renderActiveMarker();
+    renderCircuitView();
     //refreshGraph();
   });
 
@@ -200,10 +202,10 @@ function initialize() {
   syncBasisControl();
   syncMetricControl();
   renderOperations(appState.operations);
-  renderCircuitView();
   syncSlider();
   renderActiveMarker();
   renderMarkerStrip();
+  renderCircuitView();
   renderStale();
   checkConnection();
   loadDemoExperiments();
@@ -521,10 +523,10 @@ function renderCircuitView(operations = appState.operations, numQubits = appStat
 
 function afterEdit() {
   renderOperations(appState.operations);
-  renderCircuitView();
   syncSlider();
   renderActiveMarker();
   renderMarkerStrip();
+  renderCircuitView();
   renderStale();
 }
 
