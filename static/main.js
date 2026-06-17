@@ -766,24 +766,24 @@ function markerTitle(marker, status) {
     ? "cached"
     : status === "dirty"
       ? "needs run"
-      : "not selected";
-  return `${markerOperationLabel(marker)}\nMarker ${marker}: ${statusLabel}`;
+      : "";
+  return [markerOperationLabel(marker), statusLabel].filter(Boolean).join("\n");
 }
 
 function markerOperationLabel(marker) {
   if (marker <= 0) return "Input state";
   const operation = appState.operations[marker - 1];
-  if (!operation) return `After operation ${marker}`;
-  return `After ${formatMarkerOperation(operation, marker)}`;
+  if (!operation) return "Operation unavailable";
+  return formatMarkerOperation(operation);
 }
 
-function formatMarkerOperation(operation, index) {
+function formatMarkerOperation(operation) {
   const gate = String(operation.gate || "?").toUpperCase();
   const qubits = Array.isArray(operation.qubits) ? operation.qubits.join(",") : "";
   const angle = operation.params?.angle;
   return angle != null
-    ? `${index}. ${gate}(${Number(angle).toFixed(3)})[${qubits}]`
-    : `${index}. ${gate}[${qubits}]`;
+    ? `${gate}(${Number(angle).toFixed(3)})[${qubits}]`
+    : `${gate}[${qubits}]`;
 }
 
 function highlightCircuitMarker(marker, highlighted) {
