@@ -11,6 +11,10 @@ export function setStatus(message, tone = "neutral") {
 
 export function renderGraphCaption(state, data) {
   const caption = document.getElementById("graph-caption");
+  if (data?.stale) {
+    caption.textContent = `Run to compute, ${state.basis.toUpperCase()} analysis basis`;
+    return;
+  }
   const metric = data?.metric_label || state.metric.toUpperCase();
   const markerLabel = data?.marker_label ? `, ${data.marker_label}` : "";
   caption.textContent = `${metric}, ${state.basis.toUpperCase()} analysis basis${markerLabel}`;
@@ -223,6 +227,10 @@ export function renderTimeline(data, state) {
 
 export function renderStatevector(data) {
   const target = document.getElementById("statevector");
+  if (data?.stale) {
+    target.textContent = "Run to compute statevector.";
+    return;
+  }
   const amplitudes = data?.amplitudes || [];
   if (!amplitudes.length) {
     target.textContent = "No statevector.";
@@ -236,6 +244,11 @@ export function renderStatevector(data) {
 
 export function renderBasisGrid(data) {
   const container = document.getElementById("basis-grid");
+  if (data?.stale) {
+    container.innerHTML = "";
+    container.textContent = "Run to compute state probabilities.";
+    return;
+  }
   const amplitudes = data?.amplitudes || [];
   container.innerHTML = "";
   if (!amplitudes.length) {

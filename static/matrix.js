@@ -13,6 +13,16 @@ export function renderMatrix(data, state) {
   const label = metricLabel(state.metric, state.basis, data);
   caption.textContent = label;
 
+  if (data?.stale) {
+    caption.textContent = "Run to compute";
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    tooltip.style.opacity = "0";
+    mean.textContent = "-";
+    max.textContent = "-";
+    argmax.textContent = "-";
+    return;
+  }
+
   if (!data || !Array.isArray(data.nodes) || data.nodes.length === 0) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     mean.textContent = "-";

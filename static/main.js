@@ -18,8 +18,8 @@ import {
   toggleMarkerSelection,
   markMarkersCached,
 } from "./state.js";
-import {initGraph, renderGraph} from "./graph.js?v=basis-labels-1";
-import {renderMatrix} from "./matrix.js";
+import {initGraph, renderGraph} from "./graph.js?v=stale-compute-1";
+import {renderMatrix} from "./matrix.js?v=stale-compute-1";
 import {
   renderBasisGrid,
   renderCircuit,
@@ -30,7 +30,7 @@ import {
   renderTimeline,
   setQubitInputs,
   setStatus,
-} from "./views.js";
+} from "./views.js?v=stale-compute-1";
 
 const singleGateRoutes = {
   H: "/apply_hadamard",
@@ -178,7 +178,7 @@ function bindControls() {
       replaceCircuit(result.num_qubits, result.operations);
       setQubitInputs(appState.numQubits);
       afterEdit();
-      setStatus("Ready", "ok");
+      setStatus("Needs run");
     } catch (error) {
       setStatus(error.message, "error");
     }
@@ -428,6 +428,7 @@ async function handleGraphNodeClick(qubitId) {
   if (pending.kind === "single") {
     //const ok = await runAction(() => apiPost(singleGateRoutes[pending.gate], {qubit_id: qubit}));
     appendOp({gate: pending.gate.toLowerCase(), qubits: [qubit], params: {}});
+    setMarker(appState.operations.length);
     afterEdit();
     clearPendingGate("Ready");
     return;
@@ -437,6 +438,7 @@ async function handleGraphNodeClick(qubitId) {
     const angle = Number.parseFloat(document.getElementById("rotation-angle").value);
     //const ok = await runAction(() => apiPost(rotationRoutes[pending.gate], {qubit_id: qubit, angle}));
     appendOp({gate: pending.gate.toLowerCase(), qubits: [qubit], params: {angle}});
+    setMarker(appState.operations.length);
     afterEdit();
     clearPendingGate("Ready");
     return;
@@ -462,6 +464,7 @@ async function handleGraphNodeClick(qubitId) {
       //target_id: qubit,
     //}));
     appendOp({gate: pending.gate.toLowerCase(), qubits: [control, qubit], params: {}});
+    setMarker(appState.operations.length);
     afterEdit();
     clearPendingGate("Ready");
   }
@@ -484,7 +487,10 @@ function clearPendingGate(message = "") {
   setPendingGate(null);
   syncGateButtonState();
   renderGraph(appState.graphData, appState);
-  if (message) setStatus(message, message === "Ready" ? "ok" : "neutral");
+  if (message) {
+    const nextMessage = message === "Ready" && appState.stale ? "Needs run" : message;
+    setStatus(nextMessage, nextMessage === "Ready" ? "ok" : "neutral");
+  }
 }
 
 function syncGateButtonState() {
@@ -547,11 +553,13 @@ function afterEdit() {
   renderMarkerStrip();
   renderCircuitView();
   renderStale();
+  if (appState.stale) setStatus("Needs run");
 }
 
 
-function placeholderGraph() {
+function placeholderGraph(stale = false) {
   return {
+    stale,
     nodes: Array.from({length: appState.numQubits}, (_, index) => ({id: index})),
     edges: [],
   };
@@ -559,7 +567,9 @@ function placeholderGraph() {
 
 function renderActiveMarker() {
   const marker = appState.marker ?? appState.operations?.length ?? 0;
-  appState.graphData = appState.results.find(result => result.marker === marker) || placeholderGraph();
+  appState.graphData = appState.stale
+    ? placeholderGraph(true)
+    : appState.results.find(result => result.marker === marker) || placeholderGraph();
   renderGraph(appState.graphData, appState);
   renderMatrix(appState.graphData, appState);
   renderGraphCaption(appState, appState.graphData);
@@ -670,6 +680,9 @@ function syncSlider() {
 function navigableMarkers() {
   const selected = selectedMarkerIds();
   if (selected.length) return selected;
+  if (appState.stale) {
+    return Array.from({length: appState.operations.length + 1}, (_, index) => index);
+  }
   return Array.from(new Set(appState.results.map(result => Number(result.marker))))
     .filter(Number.isInteger)
     .sort((a, b) => a - b);
