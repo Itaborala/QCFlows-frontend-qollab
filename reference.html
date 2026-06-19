@@ -70,6 +70,7 @@
       border-radius: 10px;
       padding: 18px;
       margin-bottom: 16px;
+      scroll-margin-top: 18px;
     }
 
     .ref-card h2 {
@@ -91,6 +92,33 @@
       border-top: 1px solid var(--line);
       padding-top: 14px;
       margin-top: 14px;
+      scroll-margin-top: 18px;
+    }
+
+    .mini-ref {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      margin-top: 12px;
+      scroll-margin-top: 18px;
+    }
+
+    .mini-ref:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    .mini-ref h3 {
+      margin: 0 0 5px;
+      color: #334155;
+      font-size: 14px;
+    }
+
+    .mini-ref p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     .tool-snapshot {
@@ -110,6 +138,33 @@
 
     .tool-snapshot button {
       pointer-events: none;
+    }
+
+    .ref-card:target,
+    .metric-ref:target,
+    .mini-ref:target {
+      border-radius: 8px;
+      animation: ref-target-highlight 1.35s ease-out;
+    }
+
+    @keyframes ref-target-highlight {
+      0% {
+        background: #f0fdfa;
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+      }
+
+      100% {
+        background: var(--panel);
+        box-shadow: 0 0 0 0 rgba(15, 118, 110, 0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ref-card:target,
+      .metric-ref:target,
+      .mini-ref:target {
+        animation: none;
+      }
     }
 
     .metric-ref:first-of-type {
@@ -226,6 +281,24 @@
       a matrix, and per-state amplitudes.
     </p>
 
+    <section class="ref-card" id="analysis-basis">
+      <h2>Analysis basis</h2>
+      <p class="desc">
+        The X/Y/Z control chooses the coordinate basis used for analysis and
+        display. It changes K, node colors, and state readouts without inserting
+        measurement operations into the circuit.
+      </p>
+
+      <div class="tool-snapshot" aria-label="Analysis basis selector preview">
+        <span class="field-label">Analysis basis</span>
+        <div class="segmented">
+          <button type="button" class="active" tabindex="-1">Z</button>
+          <button type="button" tabindex="-1">X</button>
+          <button type="button" tabindex="-1">Y</button>
+        </div>
+      </div>
+    </section>
+
     <section class="ref-card" id="metrics">
       <h2>Pair metrics</h2>
       <p class="desc">
@@ -271,8 +344,52 @@
       </article>
     </section>
 
-    <section class="ref-card">
-      <h2>Qubit nodes</h2>
+    <section class="ref-card" id="app-areas">
+      <h2>App areas</h2>
+
+      <article class="mini-ref" id="views">
+        <h3>Views</h3>
+        <p>Shows or hides panels in the workspace without changing circuit data or computed results.</p>
+      </article>
+
+      <article class="mini-ref" id="examples">
+        <h3>Examples</h3>
+        <p>Loads stored circuits from the backend so you can inspect known patterns without rebuilding them by hand.</p>
+      </article>
+
+      <article class="mini-ref" id="build">
+        <h3>Build</h3>
+        <p>Edits the local circuit: qubit count, gate placement, undo, and reset. Press Run to compute metrics for the current circuit.</p>
+      </article>
+
+      <article class="mini-ref" id="circuit">
+        <h3>Circuit</h3>
+        <p>Shows the current operation sequence and marker history. Markers let you inspect selected points in the circuit timeline.</p>
+      </article>
+
+      <article class="mini-ref" id="metric-matrix">
+        <h3>Metric Matrix</h3>
+        <p>Shows the selected pair metric as a matrix. Empty cells mean that pair data is unavailable for the current marker.</p>
+      </article>
+
+      <article class="mini-ref" id="states">
+        <h3>States</h3>
+        <p>Shows state probabilities in the selected analysis basis when statevector data is available.</p>
+      </article>
+
+      <article class="mini-ref" id="statevector">
+        <h3>Statevector</h3>
+        <p>Lists non-negligible statevector amplitudes for the selected marker and analysis basis.</p>
+      </article>
+
+      <article class="mini-ref" id="qasm">
+        <h3>Import QASM</h3>
+        <p>Imports and exports supported OpenQASM through the backend Qiskit bridge.</p>
+      </article>
+    </section>
+
+    <section class="ref-card" id="qubit-graph">
+      <h2>Qubit graph</h2>
       <p class="desc">
         Each circle in the graph is a qubit. Its color shows where its single-qubit
         state sits in the chosen analysis basis — the same color scale the graph uses.
