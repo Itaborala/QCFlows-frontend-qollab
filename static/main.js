@@ -18,7 +18,7 @@ import {
   toggleMarkerSelection,
   markMarkersCached,
 } from "./state.js";
-import {initGraph, renderGraph} from "./graph.js";
+import {initGraph, renderGraph} from "./graph.js?v=basis-labels-1";
 import {renderMatrix} from "./matrix.js";
 import {
   renderBasisGrid,

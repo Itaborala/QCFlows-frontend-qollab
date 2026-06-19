@@ -1,6 +1,11 @@
 import {edgeValue, metricMax, metricLabel, pairLabel} from "./metrics.js";
 
 const size = {width: 720, height: 520};
+const positiveBasisStates = {
+  z: "|0>",
+  x: "|+>",
+  y: "|i>",
+};
 let svg;
 let simulation;
 let handleNodeSelect;
@@ -195,7 +200,7 @@ function isPendingOrigin(node, state) {
 }
 
 function nodeTitle(node, state) {
-  const base = `Qubit ${node.id}\nP(0) = ${Number(node.prob0 ?? 0).toFixed(3)}`;
+  const base = `Qubit ${node.id}\nP(${positiveBasisState(state)}) = ${nodeProbability(node)}`;
   const pending = state?.pendingGate;
   if (!pending) return base;
   if (isPendingOrigin(node, state)) return `${base}\n${pending.gate} control selected`;
@@ -205,10 +210,19 @@ function nodeTitle(node, state) {
 
 function nodeAriaLabel(node, state) {
   const pending = state?.pendingGate;
-  if (!pending) return `Select qubit ${node.id}`;
-  if (isPendingOrigin(node, state)) return `Qubit ${node.id}, ${pending.gate} control selected`;
-  if (isPlacementTarget(node, state)) return `Place ${pending.gate} on qubit ${node.id}`;
-  return `Qubit ${node.id}`;
+  const probability = `P(${positiveBasisState(state)}) = ${nodeProbability(node)}`;
+  if (!pending) return `Select qubit ${node.id}; ${probability}`;
+  if (isPendingOrigin(node, state)) return `Qubit ${node.id}, ${probability}, ${pending.gate} control selected`;
+  if (isPlacementTarget(node, state)) return `Place ${pending.gate} on qubit ${node.id}; ${probability}`;
+  return `Qubit ${node.id}; ${probability}`;
+}
+
+function positiveBasisState(state) {
+  return positiveBasisStates[state?.basis] || positiveBasisStates.z;
+}
+
+function nodeProbability(node) {
+  return Number(node.prob0 ?? 0).toFixed(3);
 }
 
 function sameId(first, second) {
