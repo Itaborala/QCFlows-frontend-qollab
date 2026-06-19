@@ -55,7 +55,7 @@ const twoGateRoutes = {
 const metricHelp = {
   k: {
     title: "K metric",
-    body: "Directional, basis-specific pair score: how much measuring one qubit distinguishes the conditional states of the other.",
+    body: "Directional, analysis-basis-specific pair score: how much splitting one qubit along X, Y, or Z distinguishes the conditional states of the other.",
     href: "reference.html#metric-k",
   },
   eof: {

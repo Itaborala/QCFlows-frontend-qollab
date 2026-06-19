@@ -13,7 +13,7 @@ export function renderGraphCaption(state, data) {
   const caption = document.getElementById("graph-caption");
   const metric = data?.metric_label || state.metric.toUpperCase();
   const markerLabel = data?.marker_label ? `, ${data.marker_label}` : "";
-  caption.textContent = `${metric}, ${state.basis.toUpperCase()} basis${markerLabel}`;
+  caption.textContent = `${metric}, ${state.basis.toUpperCase()} analysis basis${markerLabel}`;
 }
 
 //export function renderCircuit(data) {
