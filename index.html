@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <link rel="stylesheet" href="static/style.css?v=graph-gates-1">
+  <link rel="stylesheet" href="static/style.css?v=stale-compute-1">
 </head>
 <body>
   <div class="app-shell">
@@ -17,10 +17,11 @@
         <h1>QCFlows</h1>
         <div id="status" class="status-pill">Connecting</div>
       </div>
+      <a href="reference.html" class="reference-link">Reference</a>
 
       <section class="tool-section" data-collapsible data-collapse-key="basis">
-        <h2>Basis</h2>
-        <div id="basis-control" class="segmented-control" aria-label="Basis">
+        <h2><a class="heading-link" href="reference.html#analysis-basis">Analysis basis</a></h2>
+        <div id="basis-control" class="segmented-control" aria-label="Analysis basis">
           <button type="button" data-basis="z" class="active">Z</button>
           <button type="button" data-basis="x">X</button>
           <button type="button" data-basis="y">Y</button>
@@ -28,25 +29,48 @@
       </section>
 
       <section class="tool-section" data-collapsible data-collapse-key="metric">
-        <h2>Metric</h2>
-        <div id="metric-control" class="segmented-control" aria-label="Line metric">
-          <button type="button" data-metric="k" class="active">K</button>
-          <button type="button" data-metric="eof">EoF</button>
-          <button type="button" data-metric="mi">MI</button>
+        <h2><a class="heading-link" href="reference.html#metrics">Metric</a></h2>
+        <div class="metric-help-wrap">
+          <div id="metric-control" class="segmented-control" aria-label="Line metric">
+            <button type="button" data-metric="k" class="active" aria-describedby="metric-help-popover">K</button>
+            <button type="button" data-metric="eof" aria-describedby="metric-help-popover">EoF</button>
+            <button type="button" data-metric="mi" aria-describedby="metric-help-popover">MI</button>
+          </div>
+          <div id="metric-help-popover" class="metric-help-popover" role="tooltip" hidden>
+            <strong id="metric-help-title"></strong>
+            <span id="metric-help-body"></span>
+            <a id="metric-help-link" href="reference.html#metrics">Reference</a>
+          </div>
         </div>
       </section>
 
-      <section class="tool-section" data-collapsible data-collapse-key="qubits">
-        <h2>Qubits</h2>
-        <label class="field-label" for="qubit-count">Count</label>
-        <div class="inline-fields">
+      <section class="tool-section" data-collapsible data-collapse-key="views">
+        <h2><a class="heading-link" href="reference.html#views">Views</a></h2>
+        <div class="view-toggle-grid" aria-label="Visible panels">
+          <label class="check-option"><input type="checkbox" data-panel-toggle="graph" checked> <span>Graph</span></label>
+          <label class="check-option"><input type="checkbox" data-panel-toggle="circuit" checked> <span>Circuit</span></label>
+          <label class="check-option"><input type="checkbox" data-panel-toggle="qasm" checked> <span>QASM</span></label>
+          <label class="check-option"><input type="checkbox" data-panel-toggle="metric-matrix"> <span>K-matrix</span></label>
+          <label class="check-option"><input type="checkbox" data-panel-toggle="states"> <span>States</span></label>
+          <label class="check-option"><input type="checkbox" data-panel-toggle="statevector"> <span>Statevector</span></label>
+        </div>
+      </section>
+
+      <section class="tool-section" data-collapsible data-collapse-key="examples">
+        <h2><a class="heading-link" href="reference.html#examples">Examples</a></h2>
+        <div class="demo-loader">
+          <select id="demo-experiment-select" aria-label="Demo experiment"></select>
+          <button id="load-demo-experiment" type="button">Load</button>
+        </div>
+      </section>
+
+      <section class="tool-section build-section" data-collapsible data-collapse-key="build">
+        <h2><a class="heading-link" href="reference.html#build">Build</a></h2>
+        <div class="field-row qubit-count-row">
+          <label class="field-label" for="qubit-count">Count</label>
           <input id="qubit-count" type="number" min="1" max="12" value="5">
           <button id="set-qubits" type="button">Set</button>
         </div>
-      </section>
-
-      <section class="tool-section" data-collapsible data-collapse-key="single-qubit">
-        <h2>Single Qubit</h2>
         <div class="button-grid gate-grid">
           <button type="button" data-single-gate="H">H</button>
           <button type="button" data-single-gate="X">X</button>
@@ -55,25 +79,19 @@
           <button type="button" data-single-gate="Z">Z</button>
           <button type="button" data-single-gate="Y">Y</button>
         </div>
-        <label class="field-label" for="rotation-angle">Angle</label>
-        <input id="rotation-angle" type="number" step="any" value="1.5708">
+        <div class="field-row angle-row">
+          <label class="field-label" for="rotation-angle">Angle</label>
+          <input id="rotation-angle" type="number" step="any" value="1.5708">
+        </div>
         <div class="button-grid">
           <button type="button" data-rotation-gate="RX">RX</button>
           <button type="button" data-rotation-gate="RY">RY</button>
           <button type="button" data-rotation-gate="RZ">RZ</button>
         </div>
-      </section>
-
-      <section class="tool-section" data-collapsible data-collapse-key="two-qubit">
-        <h2>Two Qubit</h2>
-        <div class="button-grid">
+        <div class="button-grid two-gate-grid">
           <button type="button" data-two-gate="CX">CX</button>
           <button type="button" data-two-gate="CZ">CZ</button>
         </div>
-      </section>
-
-      <section class="tool-section" data-collapsible data-collapse-key="circuit-actions">
-        <h2>Circuit</h2>
         <div class="button-row">
           <button id="undo-gate" type="button">Undo</button>
           <button id="reset-circuit" type="button">Reset</button>
@@ -82,17 +100,17 @@
     </aside>
 
     <main class="workspace">
-      <section class="panel graph-panel">
+      <section class="panel graph-panel" data-panel-key="graph">
         <div class="panel-header">
-          <h2>Qubit Graph</h2>
-          <span id="graph-caption" class="muted">K, Z basis</span>
+          <h2><a class="heading-link" href="reference.html#qubit-graph">Qubit Graph</a></h2>
+          <span id="graph-caption" class="muted">K, Z analysis basis</span>
         </div>
         <div id="graph"></div>
       </section>
 
-      <section class="panel" data-collapsible data-collapse-key="metric-matrix">
+      <section class="panel metric-panel" data-collapsible data-collapse-key="metric-matrix" data-panel-key="metric-matrix">
         <div class="panel-header">
-          <h2>Metric Matrix</h2>
+          <h2><a class="heading-link" href="reference.html#metric-matrix">Metric Matrix</a></h2>
           <span id="matrix-caption" class="muted">K</span>
         </div>
         <canvas id="metric-matrix"></canvas>
@@ -104,44 +122,45 @@
         </div>
       </section>
 
-      <section class="panel" data-collapsible data-collapse-key="states">
+      <section class="panel states-panel" data-collapsible data-collapse-key="states" data-panel-key="states">
         <div class="panel-header">
-          <h2>States</h2>
+          <h2><a class="heading-link" href="reference.html#states">States</a></h2>
           <span id="states-caption" class="muted">Amplitudes</span>
         </div>
         <div id="basis-grid"></div>
       </section>
 
-      <section class="panel" data-collapsible data-collapse-key="statevector">
+      <section class="panel statevector-panel" data-collapsible data-collapse-key="statevector" data-panel-key="statevector">
         <div class="panel-header">
-          <h2>Statevector</h2>
+          <h2><a class="heading-link" href="reference.html#statevector">Statevector</a></h2>
         </div>
         <pre id="statevector">Loading...</pre>
       </section>
 
-      <section class="panel" data-collapsible data-collapse-key="circuit">
+      <section class="panel circuit-panel" data-collapsible data-collapse-key="circuit" data-panel-key="circuit">
         <div class="panel-header">
-          <h2>Circuit</h2>
+          <h2><a class="heading-link" href="reference.html#circuit">Circuit</a></h2>
           <div class="header-actions">
             <span id="circuit-stale" class="stale-hint" hidden>Circuit Updated - press Run</span>
             <button id="run-circuit" type="button">Run</button>
             <button id="load-current-qasm" type="button" class="quiet-button">QASM</button>
           </div>
         </div>
-        <div class="history-control circuit-history">
+        <div class="history-control circuit-history" data-collapse-persistent>
           <input id="history-marker" type="range" min="0" max="0" step="1" value="0" disabled>
           <div class="history-meta">
             <span id="history-label">Latest</span>
             <span id="history-count">-</span>
           </div>
         </div>
+        <div id="marker-strip" class="marker-strip" aria-label="Circuit markers"></div>
         <div id="operations-list" class="operations-list">Loading...</div>
         <div id="circuit">Loading...</div>
       </section>
 
-      <section class="panel qasm-panel" data-collapsible data-collapse-key="import-qasm">
+      <section class="panel qasm-panel" data-collapsible data-collapse-key="import-qasm" data-panel-key="qasm">
         <div class="panel-header">
-          <h2>Import QASM</h2>
+          <h2><a class="heading-link" href="reference.html#qasm">Import QASM</a></h2>
           <button id="import-qasm" type="button">Load</button>
         </div>
         <textarea id="qasm-input" spellcheck="false">OPENQASM 3.0;
@@ -153,6 +172,6 @@ cx q[0],q[1];</textarea>
     </main>
   </div>
 
-  <script type="module" src="static/main.js?v=graph-gates-1"></script>
+  <script type="module" src="static/main.js?v=stale-compute-1"></script>
 </body>
 </html>

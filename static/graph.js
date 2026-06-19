@@ -1,6 +1,11 @@
 import {edgeValue, metricMax, metricLabel, pairLabel} from "./metrics.js";
 
 const size = {width: 720, height: 520};
+const positiveBasisStates = {
+  z: "|0>",
+  x: "|+>",
+  y: "|i>",
+};
 let svg;
 let simulation;
 let handleNodeSelect;
@@ -61,13 +66,17 @@ export function renderGraph(data, state) {
   if (!data || !Array.isArray(data.nodes)) {
     d3.select("#graph")
       .classed("is-empty", true)
-      .classed("placement-active", false);
+      .classed("is-stale", false)
+      .classed("placement-active", false)
+      .attr("data-placement-label", null);
     return;
   }
 
   d3.select("#graph")
     .classed("is-empty", false)
-    .classed("placement-active", Boolean(state?.pendingGate));
+    .classed("is-stale", Boolean(data.stale))
+    .classed("placement-active", Boolean(state?.pendingGate))
+    .attr("data-placement-label", placementLabel(state));
   const nodes = mergeNodes(simulation.nodes(), data.nodes.map(node => ({...node})));
   const edges = (data.edges || []).map(edge => ({...edge}));
   const scaleMax = metricMax(data);
@@ -82,13 +91,15 @@ export function renderGraph(data, state) {
     .attr("class", "link")
     .attr("fill", "none")
     .attr("stroke", "#64748b")
-    .attr("marker-end", d => d.directed ? "url(#arrowhead)" : null)
-    .append("title");
+    .attr("marker-end", d => d.directed ? "url(#arrowhead)" : null);
 
-  linkEnter.merge(link)
+  linkEnter.append("title");
+
+  const allLinks = linkEnter.merge(link);
+  allLinks
     .attr("stroke-width", d => 1 + 5 * Math.sqrt(Math.min(1, edgeValue(d) / scaleMax)))
-    .attr("marker-end", d => d.directed ? "url(#arrowhead)" : null)
-    .select("title")
+    .attr("marker-end", d => d.directed ? "url(#arrowhead)" : null);
+  allLinks.select("title")
     .text(d => {
       const source = nodeId(d.source);
       const target = nodeId(d.target);
@@ -136,12 +147,12 @@ export function renderGraph(data, state) {
   allNodes
     .classed("placement-target", d => isPlacementTarget(d, state))
     .classed("pending-origin", d => isPendingOrigin(d, state))
-    .attr("aria-label", d => nodeAriaLabel(d, state));
+    .attr("aria-label", d => nodeAriaLabel(d, state, data));
   allNodes.select("circle")
-    .attr("fill", d => d3.interpolateBlues(Number(d.prob0 ?? 0.5)))
+    .attr("fill", d => data.stale ? "#e2e8f0" : d3.interpolateBlues(Number(d.prob0 ?? 0.5)))
     .attr("stroke", "#0f172a");
   allNodes.select("title")
-    .text(d => nodeTitle(d, state));
+    .text(d => nodeTitle(d, state, data));
 
   node.exit().remove();
 
@@ -190,8 +201,11 @@ function isPendingOrigin(node, state) {
     sameId(node.id, pending.control);
 }
 
-function nodeTitle(node, state) {
-  const base = `Qubit ${node.id}\nP(0) = ${Number(node.prob0 ?? 0).toFixed(3)}`;
+function nodeTitle(node, state, data) {
+  if (data?.stale) {
+    return `Qubit ${node.id}\nRun to compute probability`;
+  }
+  const base = `Qubit ${node.id}\nP(${positiveBasisState(state)}) = ${nodeProbability(node)}`;
   const pending = state?.pendingGate;
   if (!pending) return base;
   if (isPendingOrigin(node, state)) return `${base}\n${pending.gate} control selected`;
@@ -199,16 +213,42 @@ function nodeTitle(node, state) {
   return base;
 }
 
-function nodeAriaLabel(node, state) {
+function nodeAriaLabel(node, state, data) {
   const pending = state?.pendingGate;
-  if (!pending) return `Select qubit ${node.id}`;
-  if (isPendingOrigin(node, state)) return `Qubit ${node.id}, ${pending.gate} control selected`;
-  if (isPlacementTarget(node, state)) return `Place ${pending.gate} on qubit ${node.id}`;
-  return `Qubit ${node.id}`;
+  if (data?.stale) {
+    const base = `Qubit ${node.id}; run to compute probability`;
+    if (!pending) return `Select qubit ${node.id}; run to compute probability`;
+    if (isPendingOrigin(node, state)) return `${base}, ${pending.gate} control selected`;
+    if (isPlacementTarget(node, state)) return `Place ${pending.gate} on qubit ${node.id}; run to compute probability`;
+    return base;
+  }
+  const probability = `P(${positiveBasisState(state)}) = ${nodeProbability(node)}`;
+  if (!pending) return `Select qubit ${node.id}; ${probability}`;
+  if (isPendingOrigin(node, state)) return `Qubit ${node.id}, ${probability}, ${pending.gate} control selected`;
+  if (isPlacementTarget(node, state)) return `Place ${pending.gate} on qubit ${node.id}; ${probability}`;
+  return `Qubit ${node.id}; ${probability}`;
+}
+
+function positiveBasisState(state) {
+  return positiveBasisStates[state?.basis] || positiveBasisStates.z;
+}
+
+function nodeProbability(node) {
+  return Number(node.prob0 ?? 0).toFixed(3);
 }
 
 function sameId(first, second) {
   return String(first) === String(second);
+}
+
+function placementLabel(state) {
+  const pending = state?.pendingGate;
+  if (!pending) return null;
+  if (pending.kind === "two" && pending.control !== null && pending.control !== undefined) {
+    return `${pending.gate} q${pending.control} -> ?`;
+  }
+  if (pending.kind === "two") return `${pending.gate}: choose control`;
+  return `${pending.gate}: choose qubit`;
 }
 
 function placementActive() {
