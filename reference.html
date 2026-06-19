@@ -87,6 +87,63 @@
       line-height: 1.5;
     }
 
+    .metric-ref {
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+      margin-top: 14px;
+    }
+
+    .tool-snapshot {
+      display: inline-grid;
+      gap: 7px;
+      min-width: min(100%, 220px);
+      margin: 0 0 18px;
+    }
+
+    .tool-snapshot .field-label {
+      margin: 0;
+    }
+
+    .tool-snapshot .segmented {
+      max-width: none;
+    }
+
+    .tool-snapshot button {
+      pointer-events: none;
+    }
+
+    .metric-ref:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    .metric-ref h3 {
+      margin: 0 0 6px;
+      color: #334155;
+      font-size: 14px;
+    }
+
+    .metric-ref p {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .ref-link {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .ref-link:hover,
+    .ref-link:focus-visible {
+      text-decoration: underline;
+      outline: none;
+    }
+
     .demo {
       display: grid;
       grid-template-columns: 1fr 150px;
@@ -168,6 +225,51 @@
       measures (K, Entanglement of Formation, Mutual Information) appear as a graph,
       a matrix, and per-state amplitudes.
     </p>
+
+    <section class="ref-card" id="metrics">
+      <h2>Pair metrics</h2>
+      <p class="desc">
+        The graph and matrix show one selected pair metric at a time. Missing
+        entries mean that no pair density matrix is available for that marker.
+      </p>
+
+      <div class="tool-snapshot" aria-label="Metric selector preview">
+        <span class="field-label">Metric</span>
+        <div class="segmented">
+          <button type="button" class="active" tabindex="-1">K</button>
+          <button type="button" tabindex="-1">EoF</button>
+          <button type="button" tabindex="-1">MI</button>
+        </div>
+      </div>
+
+      <article class="metric-ref" id="metric-k">
+        <h3>K metric</h3>
+        <p>
+          K is directional and basis-specific. K<sub>i→j</sub> is high when
+          measuring qubit i in the selected basis prepares distinguishable
+          conditional states on qubit j.
+        </p>
+        <a class="ref-link" href="https://arxiv.org/abs/2606.16549" target="_blank" rel="noopener">K metric paper</a>
+      </article>
+
+      <article class="metric-ref" id="metric-eof">
+        <h3>Entanglement of Formation</h3>
+        <p>
+          EoF is a symmetric two-qubit entanglement measure. It is zero for
+          separable pairs and one for a maximally entangled Bell pair.
+        </p>
+        <a class="ref-link" href="https://en.wikipedia.org/wiki/Entanglement_of_formation" target="_blank" rel="noopener">Short background</a>
+      </article>
+
+      <article class="metric-ref" id="metric-mi">
+        <h3>Mutual Information</h3>
+        <p>
+          MI is a symmetric total-correlation measure. It includes both
+          classical and quantum correlations and is reported in bits.
+        </p>
+        <a class="ref-link" href="https://en.wikipedia.org/wiki/Quantum_mutual_information" target="_blank" rel="noopener">Short background</a>
+      </article>
+    </section>
 
     <section class="ref-card">
       <h2>Qubit nodes</h2>

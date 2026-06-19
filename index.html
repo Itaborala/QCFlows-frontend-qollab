@@ -30,13 +30,17 @@
 
       <section class="tool-section" data-collapsible data-collapse-key="metric">
         <h2>Metric</h2>
-        <div class="metric-control-row">
+        <div class="metric-help-wrap">
           <div id="metric-control" class="segmented-control" aria-label="Line metric">
-            <button type="button" data-metric="k" class="active">K</button>
-            <button type="button" data-metric="eof">EoF</button>
-            <button type="button" data-metric="mi">MI</button>
+            <button type="button" data-metric="k" class="active" aria-describedby="metric-help-popover">K</button>
+            <button type="button" data-metric="eof" aria-describedby="metric-help-popover">EoF</button>
+            <button type="button" data-metric="mi" aria-describedby="metric-help-popover">MI</button>
           </div>
-          <a class="info-link" href="https://arxiv.org/abs/2606.16549" target="_blank" rel="noopener" aria-label="Open the K metric paper" title="Open the K metric paper">?</a>
+          <div id="metric-help-popover" class="metric-help-popover" role="tooltip" hidden>
+            <strong id="metric-help-title"></strong>
+            <span id="metric-help-body"></span>
+            <a id="metric-help-link" href="reference.html#metrics">Reference</a>
+          </div>
         </div>
       </section>
 

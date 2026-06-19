@@ -352,32 +352,47 @@ pre {
   overflow: hidden;
 }
 
-.metric-control-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 28px;
-  gap: 6px;
-  align-items: center;
+.metric-help-wrap {
+  position: relative;
 }
 
-.info-link {
+.metric-help-popover {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 7px);
+  z-index: 20;
   display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  color: var(--muted);
+  gap: 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+  color: #334155;
+  padding: 9px 10px;
   font-size: var(--text-xs);
+  line-height: 1.35;
+}
+
+.metric-help-popover[hidden] {
+  display: none;
+}
+
+.metric-help-popover strong {
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: 1.2;
+}
+
+.metric-help-popover a {
+  color: var(--accent);
   font-weight: 700;
-  line-height: 1;
   text-decoration: none;
 }
 
-.info-link:hover,
-.info-link:focus-visible {
-  border-color: var(--line);
-  background: var(--panel-soft);
-  color: var(--accent);
+.metric-help-popover a:hover,
+.metric-help-popover a:focus-visible {
+  text-decoration: underline;
   outline: none;
 }
 

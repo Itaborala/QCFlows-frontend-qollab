@@ -52,6 +52,24 @@ const twoGateRoutes = {
   CZ: "/apply_cz",
 };
 
+const metricHelp = {
+  k: {
+    title: "K metric",
+    body: "Directional, basis-specific pair score: how much measuring one qubit distinguishes the conditional states of the other.",
+    href: "reference.html#metric-k",
+  },
+  eof: {
+    title: "Entanglement of Formation",
+    body: "Symmetric two-qubit entanglement measure. Zero for separable pairs; one for a maximally entangled Bell pair.",
+    href: "reference.html#metric-eof",
+  },
+  mi: {
+    title: "Mutual Information",
+    body: "Symmetric total-correlation measure, including classical and quantum correlations. Values are in bits.",
+    href: "reference.html#metric-mi",
+  },
+};
+
 initGraph(handleGraphNodeClick);
 initCollapsibleSections();
 initPanelVisibility();
@@ -126,6 +144,7 @@ function bindControls() {
   });
 
   syncGateButtonState();
+  bindMetricHelp();
 
   document.getElementById("set-qubits").addEventListener("click", () => {
     const requested = readInteger("qubit-count");
@@ -821,6 +840,47 @@ function syncMetricControl() {
   document.querySelectorAll("#metric-control button").forEach(button => {
     button.classList.toggle("active", button.dataset.metric === appState.metric);
   });
+}
+
+function bindMetricHelp() {
+  const popover = document.getElementById("metric-help-popover");
+  const title = document.getElementById("metric-help-title");
+  const body = document.getElementById("metric-help-body");
+  const link = document.getElementById("metric-help-link");
+  const buttons = document.querySelectorAll("#metric-control [data-metric]");
+  if (!popover || !title || !body || !link || !buttons.length) return;
+
+  let hideTimer = null;
+  const clearHide = () => {
+    if (hideTimer) window.clearTimeout(hideTimer);
+    hideTimer = null;
+  };
+  const show = button => {
+    const info = metricHelp[button.dataset.metric];
+    if (!info) return;
+    clearHide();
+    title.textContent = info.title;
+    body.textContent = info.body;
+    link.href = info.href;
+    popover.hidden = false;
+  };
+  const hide = () => {
+    clearHide();
+    hideTimer = window.setTimeout(() => {
+      popover.hidden = true;
+    }, 120);
+  };
+
+  buttons.forEach(button => {
+    const info = metricHelp[button.dataset.metric];
+    if (info) button.title = `${info.title}: ${info.body}`;
+    button.addEventListener("mouseenter", () => show(button));
+    button.addEventListener("focus", () => show(button));
+    button.addEventListener("mouseleave", hide);
+    button.addEventListener("blur", hide);
+  });
+  popover.addEventListener("mouseenter", clearHide);
+  popover.addEventListener("mouseleave", hide);
 }
 
 function bindSegmented(id, dataKey, handler) {
