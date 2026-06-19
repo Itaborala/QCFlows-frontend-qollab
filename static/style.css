@@ -559,6 +559,23 @@ pre {
   font-variant-numeric: tabular-nums;
 }
 
+
+.reference-link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  color: var(--accent);
+  font-weight: 600;
+}
+.reference-link:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(420px, 1.5fr) minmax(300px, 0.9fr);
