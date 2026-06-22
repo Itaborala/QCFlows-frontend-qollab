@@ -114,6 +114,8 @@ pre {
   border-right: 1px solid var(--line);
   padding: 16px 14px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar button {
@@ -139,6 +141,29 @@ pre {
   appearance: none;
   margin: 0;
 }
+
+.sidebar-credits {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.sidebar-credits a { color: inherit; }
+
+
+.ref-footer {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: #64748b;
+  font-size: 13px;
+}
+
+.ref-footer a { color: inherit; }
+
 
 .brand-block {
   display: flex;
@@ -987,6 +1012,9 @@ pre {
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
+
+
+  
 
   .workspace {
     grid-template-columns: 1fr;
