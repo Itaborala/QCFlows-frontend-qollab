@@ -154,15 +154,6 @@ pre {
 .sidebar-credits a { color: inherit; }
 
 
-.ref-footer {
-  margin-top: 28px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
-  color: #64748b;
-  font-size: 13px;
-}
-
-.ref-footer a { color: inherit; }
 
 
 .brand-block {
