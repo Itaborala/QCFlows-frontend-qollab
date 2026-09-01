@@ -78,7 +78,8 @@ export function renderGraph(data, state) {
     .classed("placement-active", Boolean(state?.pendingGate))
     .attr("data-placement-label", placementLabel(state));
   const nodes = mergeNodes(simulation.nodes(), data.nodes.map(node => ({...node})));
-  const edges = (data.edges || []).map(edge => ({...edge}));
+  //const edges = (data.edges || []).map(edge => ({...edge}));
+  const edges = buildEdges(data);
   const scaleMax = metricMax(data);
   const label = metricLabel(state.metric, state.basis, data);
 
@@ -159,6 +160,28 @@ export function renderGraph(data, state) {
   simulation.nodes(nodes);
   simulation.force("link").links(edges);
   simulation.alpha(0.4).restart();
+}
+
+const DIRECTED_RTOL = 1e-5;
+
+function buildEdges(data) {
+  const m = data.matrix;
+  if (!Array.isArray(m)) return (data.edges || []).map(edge => ({...edge}));
+  const out = [];
+  for (let s = 0; s < m.length; s += 1) {
+    for (let t = s + 1; t < m.length; t += 1) {
+      const fwd = Number(m[s]?.[t] ?? 0);
+      const rev = Number(m[t]?.[s] ?? 0);
+      if (Math.abs(fwd - rev) <= DIRECTED_RTOL * Math.max(fwd, rev, 1e-12)) {
+        const val = Math.max(fwd, rev);
+        if (val > 1e-9) out.push({source: s, target: t, value: val, directed: false});
+        continue;
+      }
+      if (fwd > 1e-9) out.push({source: s, target: t, value: fwd, directed: true});
+      if (rev > 1e-9) out.push({source: t, target: s, value: rev, directed: true});
+    }
+  }
+  return out;
 }
 
 function mergeNodes(oldNodes, newNodes) {

@@ -32,7 +32,7 @@ export function renderMatrix(data, state) {
   }
 
   const n = data.nodes.length;
-  const matrix = buildMatrix(data, n);
+  const matrix = data.matrix ?? buildMatrix(data, n);
   const stats = matrixStats(matrix);
   mean.textContent = stats.mean.toFixed(4);
   max.textContent = stats.max.toFixed(4);

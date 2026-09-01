@@ -95,6 +95,10 @@ function bindControls() {
     renderCircuitView();
     //refreshGraph();
   });
+  document.getElementById("load-experiment-file").addEventListener("click", () => {
+    document.getElementById("experiment-file").click();
+  });
+  document.getElementById("experiment-file").addEventListener("change", loadExperimentFile);
 
   document.getElementById("run-circuit").addEventListener("click", runSimulation);
   document.getElementById("load-demo-experiment").addEventListener("click", loadSelectedDemoExperiment);
@@ -284,6 +288,33 @@ async function loadSelectedDemoExperiment() {
     setStatus(error.message, "error");
   }
 }
+
+async function loadExperimentFile(event) {
+  const file = event.target.files?.[0];
+  //console.log("here");
+  //console.log(file);
+  event.target.value = "";                 // allow re-picking the same file
+  if (!file) return;
+  try {
+    setStatus("Loading experiment");
+    const data = await apiPost("/experiment", JSON.parse(await file.text()));
+    replaceCircuit(data.num_qubits, [], {
+      marker: 0,
+      resultsBy: data.results_by_metric_basis,
+      stale: false,
+    });
+    setQubitInputs(appState.numQubits);
+    syncSlider();
+    renderActiveMarker();
+    renderMarkerStrip();
+    renderCircuitView();
+    renderStale();
+    setStatus(`Loaded ${data.metadata?.name || file.name}`, "ok");
+  } catch (error) {
+    setStatus(error.message, "error");
+  }
+}
+
 
 function setDemoSelectMessage(select, message) {
   const option = document.createElement("option");
